@@ -1,4 +1,6 @@
+import GUI
 
+gui = GUI.GUI()
 
 def ready():
     # create new chess gui
