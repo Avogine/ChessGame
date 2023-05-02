@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 
+
 class GUI(QtWidgets.QApplication):
     def __init__(self):
         super(GUI, self).__init__([])
@@ -8,10 +9,9 @@ class GUI(QtWidgets.QApplication):
         self.hboxlayout = QtWidgets.QHBoxLayout()  # this second layout stores the board and controls
         self.vboxlayout.addLayout(self.hboxlayout)
 
-        # add board to second layouto
+        # add board to second layout
         self.board = Board()
         self.hboxlayout.addLayout(self.board)
-
 
         self.window.setLayout(self.vboxlayout)
         self.window.show()
@@ -19,7 +19,7 @@ class GUI(QtWidgets.QApplication):
 
 
 class Board(QtWidgets.QGridLayout):
-    def __init__(self):
+    def __init__(self, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff")):
         super(Board, self).__init__()
 
         # TODO: set minimum width and height for each column
@@ -29,9 +29,6 @@ class Board(QtWidgets.QGridLayout):
                 button = QtWidgets.QPushButton('Test')
                 button.setFlat(True)
                 self.addWidget(button, row, column)
-
-
-
 
     board = [
         [0, 0, 0, 0, 0, 0],
