@@ -4,14 +4,15 @@ class Spielfeld:
         pass
 
     board = [
-        [8, 4, 6, 10, 12, 6, 4, 8],
-        [2, 2, 2, 2 , 2 , 2, 2, 2],
-        [0, 0, 0, 0 , 0 , 0, 0, 0],
-        [0, 0, 0, 0 , 0 , 0, 0, 0],
-        [0, 0, 0, 0 , 0 , 0, 0, 0],
-        [0, 0, 0, 0 , 0 , 0, 0, 0],
-        [1, 1, 1, 1 , 1 , 1, 1, 1],
-        [7, 3, 5,  9, 11, 5, 3, 7]
+
+        13, 8, 4, 6, 10, 12, 6, 4, 8, 13,
+        13, 2, 2, 2, 2 , 2 , 2, 2, 2, 13,
+        13, 0, 0, 0, 0 , 0 , 0, 0, 0, 13,
+        13, 0, 0, 0, 0 , 0 , 0, 0, 0, 13,
+        13, 0, 0, 0, 0 , 0 , 0, 0, 0, 13,
+        13, 0, 0, 0, 0 , 0 , 0, 0, 0, 13,
+        13, 1, 1, 1, 1 , 1 , 1, 1, 1, 13,
+        13, 7, 3, 5,  9, 11, 5, 3, 7, 13,
             ]
 
     def is_white(self, piece_num):
@@ -34,99 +35,69 @@ class Spielfeld:
             return(False)
 
 
-    def return_figur(self, x, y):
-        if x >= 0 or x <= 7 or y >= 0 or y <= 7:
-            return(self.board[x][y])
+    def return_figur(self, pos):
+        if pos >= 0 and pos <= 63:
+            return(self.board[pos])
         else:
             return(13)
-
-    def check_posmoves(self,x,y):
-        piece = self.return_figur(x, y)
+    def check_posmoves(self,pos):
+        piece = self.return_figur(pos)
         ret = []
         if piece == 0: # moves für keine Figur
             pass
         if piece == 1: # moves für w.Bauer
-            if self.return_figur(x-1,y) == 0: # checkt 1 Feld davor
-                ret.append((x-1, y))
+            if self.return_figur(pos-10) == 0: # checkt 1 Feld davor
+                ret.append((pos-10))
 
-                if self.return_figur(x-2,y) == 0: # checkt 2 Felder davor
-                    ret.append((x-2, y))
+                if self.return_figur(pos - 20) == 0: # checkt 2 Felder davor
+                    ret.append((pos - 20))
 
-            if self.is_white(self.return_figur(x-1,y+1)): # checkt Feld rechts vorne auf Gegner
-                ret.append((x-1,y+1))
+            if self.is_white(self.return_figur(pos - 9)): # checkt Feld rechts vorne auf Gegner
+                ret.append((pos - 9))
 
-            if self.is_white(self.return_figur(x-1,y-1)): # checkt Feld links vorne auf Gegner
-                ret.append((x-1,y-1))
+            if self.is_white(self.return_figur(pos - 11)): # checkt Feld links vorne auf Gegner
+                ret.append((pos - 11))
 
         if piece == 2: # moves für b.Bauer
-            if self.return_figur(x + 1, y) == 0:  # checkt 1 Feld davor
-                ret.append((x + 1, y))
+            if self.return_figur(pos + 10) == 0:  # checkt 1 Feld davor
+                ret.append((pos + 10))
 
-                if self.return_figur(x + 2, y) == 0:  # checkt 2 Felder davor
-                    ret.append((x + 2, y))
+                if self.return_figur(pos + 20) == 0:  # checkt 2 Felder davor
+                    ret.append((pos + 20))
 
-            if self.is_white(self.return_figur(x + 1, y + 1)):  # checkt Feld rechts vorne auf Gegner
-                ret.append((x + 1, y + 1))
+            if self.is_white(self.return_figur(pos + 9)):  # checkt Feld rechts vorne auf Gegner
+                ret.append((pos + 9))
 
-            if self.is_white(self.return_figur(x + 1, y - 1)):  # checkt Feld links vorne auf Gegner
-                ret.append((x + 1, y - 1))
+            if self.is_white(self.return_figur(pos + 11)):  # checkt Feld links vorne auf Gegner
+                ret.append((pos + 11))
 
         if piece == 3 or piece == 4: # moves für knights
-            for i in [-2,-1,1,2]:
-                new_x = x + i
-                new_y = -abs(i) + 3
-                if self.return_figur(new_x, y - new_y) == 0 or self.isnt_samecolor(new_x, y - new_y):
-                    ret.append((new_x,y - new_y))
-
-                if self.return_figur(new_x, y + new_y) == 0 or self.isnt_samecolor(new_x,y + new_y):
-                    ret.append((new_x,y + new_y))
+            for i in [-20, -19, -12, -8, 8, 12, 19, 21]:
+                new_pos = pos
+                new_pos = + i
+                if self.return_figur(new_pos) == 0 or self.isnt_samecolor(pos, new_pos):
+                    ret.append(new_pos)
 
         if piece == 5 or piece == 6: # moves for bishop
 
-            for i in [-1,1]:
-                new_x = x
-                new_y = y
-                for n in [-1,1]:
-                    new_x =+ i
-                    new_y =+ n
-                    while self.return_figur(new_x,new_y) == 0:
-                        ret.append((x+i, y+n))
-                        new_x = + i
-                        new_y = + n
-                    if self.isnt_samecolor(self.return_figur(x,y), self.return_figur(new_x, new_y)):
-                        ret.append((new_x,new_y))
+            for i in [-11, -9, 9, 11]:
+                new_pos = pos
+                    while self.return_figur(new_pos + i) == 0:
+                        ret.append(new_pos + i)
+                        new_pos = + i
+                    if self.isnt_samecolor(self.return_figur(pos), self.return_figur(new_pos + i)):
+                        ret.append(new_pos + i)
 
         if piece == 7 or piece == 8: # moves for rook
-            for i in [-1,1]:
-                new_x = x
-                new_y = y
-                while self.return_figur(new_x+i,new_y) == 0:
-                    ret.append((new_x+i,new_y))
-                    new_x =+ i
-                if self.isnt_samecolor(self.return_figur(x,y),self.return_figur(new_x+i,new_y)):
-                    ret.append((new_x+i,new_y))
-            for i in [-1,1]:
-                new_x = x
-                new_y = y
-                while self.return_figur(new_x,new_y+i) == 0:
-                    ret.append((new_x,new_y+i))
-                    new_y =+ i
-                if self.isnt_samecolor(self.return_figur(x,y),self.return_figur(new_x,new_y+i)):
-                    ret.append((new_x,new_y+i))
+            for i in [-10, -1, 1, 10]:
+                new_pos = pos
+                while self.return_figur(new_pos + i) == 0:
+                    ret.append(new_pos + i)
+                    new_pos =+ i
+                if self.isnt_samecolor(self.return_figur(pos),self.return_figur(new_pos+i):
+                    ret.append(new_pos + i)
+
 
         else:
             pass
         return(ret)
-
-
-    def move(self,x1,y1,x2,y2):
-        self.board[x2][y2] = self.board[x1][y1]
-        self.board[x1][y1] = 0
-
-
-
-test = Spielfeld()
-
-print(test.board)
-test.move(6,4,4,4)
-print(test.board)
