@@ -28,25 +28,20 @@ class Board(QtWidgets.QGridLayout):
             for column in range(0, 10):
                 button = SquareButton()
                 button.setFlat(True)
-                button.setText("AAA")
                 self.addWidget(button, row, column)
 
     print("Created GUI.")
 
 
 class SquareButton(QtWidgets.QPushButton):
-    def __init__(self, min_size = QtCore.QSize(50, 50)):
+    def __init__(self, min_size=QtCore.QSize(50, 50)):
         super(SquareButton, self).__init__()
 
         # set size policy
         h_policy = QtWidgets.QSizePolicy.Policy.Fixed
         v_policy = QtWidgets.QSizePolicy.Policy.Fixed
-        policy = QtWidgets.QSizePolicy(h_policy, v_policy)
-        policy.setHeightForWidth(True)
+        policy = QtWidgets.QSizePolicy(h_policy, v_policy, QtWidgets.QSizePolicy.ControlType.PushButton)
 
         self.setSizePolicy(policy)
 
-        self.setMinimumSize(min_size)
-
-    def heightForWidth(self, a0: int) -> int:
-        return a0
+        self.setFixedSize(min_size)
