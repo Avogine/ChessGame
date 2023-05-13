@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 
 
 class GUI(QtWidgets.QApplication):
@@ -24,10 +24,13 @@ class Board(QtWidgets.QGridLayout):
 
         # TODO: set minimum width and height for each column
 
-        for row in range(0, 10):
-            for column in range(0, 10):
+        for column in range(0, 10):
+            for row in range(0, 10):
                 button = SquareButton()
                 button.setFlat(True)
+                button.setText(str(row) + ", " + str(column))
+                palette = button.palette()
+                palette.setColor()
                 self.addWidget(button, row, column)
 
     print("Created GUI.")
