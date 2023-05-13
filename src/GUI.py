@@ -1,4 +1,5 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui, Qt
+
 
 class GUI(QtWidgets.QApplication):
     def __init__(self):
@@ -8,10 +9,9 @@ class GUI(QtWidgets.QApplication):
         self.hboxlayout = QtWidgets.QHBoxLayout()  # this second layout stores the board and controls
         self.vboxlayout.addLayout(self.hboxlayout)
 
-        # add board to second layouto
+        # add board to second layout
         self.board = Board()
         self.hboxlayout.addLayout(self.board)
-
 
         self.window.setLayout(self.vboxlayout)
         self.window.show()
@@ -19,24 +19,32 @@ class GUI(QtWidgets.QApplication):
 
 
 class Board(QtWidgets.QGridLayout):
-    def __init__(self):
+    def __init__(self, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff")):
         super(Board, self).__init__()
 
         # TODO: set minimum width and height for each column
 
-        for row in range(0, 10):
-            for column in range(0, 10):
-                button = QtWidgets.QPushButton('Test')
+        for column in range(0, 10):
+            for row in range(0, 10):
+                button = SquareButton()
                 button.setFlat(True)
+                button.setText(str(row) + ", " + str(column))
+                palette = button.palette()
+                palette.setColor()
                 self.addWidget(button, row, column)
 
-
-
-
-    board = [
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0]
-    ]
-
     print("Created GUI.")
+
+
+class SquareButton(QtWidgets.QPushButton):
+    def __init__(self, min_size=QtCore.QSize(50, 50)):
+        super(SquareButton, self).__init__()
+
+        # set size policy
+        h_policy = QtWidgets.QSizePolicy.Policy.Fixed
+        v_policy = QtWidgets.QSizePolicy.Policy.Fixed
+        policy = QtWidgets.QSizePolicy(h_policy, v_policy, QtWidgets.QSizePolicy.ControlType.PushButton)
+
+        self.setSizePolicy(policy)
+
+        self.setFixedSize(min_size)
