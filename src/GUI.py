@@ -84,8 +84,57 @@ class Board(Qt.QWidget):
                 self.grid_layout.setColumnMinimumWidth(column, square_size.width())
                 self.grid_layout.setRowMinimumHeight(column, square_size.height())
 
+        self.setAcceptDrops(True)
+
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
+
+    def dragEnterEvent(self, a0: QtGui.QDragEnterEvent) -> None:
+        pass
+        # spawn new draggable object
+
+        # mark position as selected
+
+    def dropEvent(self, event: QtGui.QDropEvent) -> None:
+        if event.mimeData().hasFormat('application/x-dnditemdata'):
+            itemdata = event.mimeData().data('application/x-dnditemdata')
+            datastream = QtCore.QDataStream(itemdata, QtCore.QIODevice.OpenModeFlag.ReadOnly)
+
+
+
+
+
+    def dragMoveEvent(self, a0: QtGui.QDragMoveEvent) -> None:
+        pass
+        # update position
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        # get child from position
+        child = self.childAt(event.pos())
+        if isinstance(child, ChessPiece):
+            # get pixmap
+            pixmap = child.pixmap()
+
+            # construct data stream
+            itemdata = QtCore.QByteArray()
+            datastream = QtCore.QDataStream(itemdata, QtCore.QIODevice.OpenModeFlag.WriteOnly)
+            datastream << QtCore.QPoint(event.pos() - child.pos())
+            mimeData = Qt.QMimeData()
+            mimeData.setData('application/x-dnditemdata', itemdata)
+
+            # create drag object
+            drag = Qt.QDrag(self)
+            drag.setMimeData(mimeData)
+            drag.setPixmap(pixmap)
+            drag.setHotSpot(event.pos() - child.pos())
+
+            # hide image
+            child.hide()
+
+            # execute
+            drag.exec()
+
+
 
     print("Created GUI.")
 
@@ -106,6 +155,9 @@ class ChessPiece(QtWidgets.QLabel):
         # set up sprite
         self.setPixmap(sprite.scaled(fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
         self.setScaledContents(True)
+
+        # set dragging
+        self.setAcceptDrops(True)
 
     def sizeHint(self) -> QtCore.QSize:
         return self.fix_size
