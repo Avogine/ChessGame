@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 import os
 
+
 class GUI(QtWidgets.QApplication):
     def __init__(self):
         super().__init__([])
@@ -19,7 +20,8 @@ class GUI(QtWidgets.QApplication):
 
 
 class Checkerboard(QtWidgets.QWidget):
-    def __init__(self, parent=None, color_bright=QtGui.QColor("#ffffff"), color_dark=QtGui.QColor("#5f8231"), square_size=100):
+    def __init__(self, parent=None, color_bright=QtGui.QColor("#ffffff"), color_dark=QtGui.QColor("#5f8231"),
+                 square_size=100):
         super().__init__(parent=parent)
 
         self.color_bright = color_bright
@@ -57,7 +59,7 @@ class Checkerboard(QtWidgets.QWidget):
 
 
 class Board(Qt.QWidget):
-    def __init__(self, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff")):
+    def __init__(self, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"), square_size=Qt.QSize(100, 100)):
         super().__init__()
 
         # TODO: set minimum width and height for each column
@@ -68,18 +70,19 @@ class Board(Qt.QWidget):
 
         # add grid layout
         self.grid_layout = QtWidgets.QGridLayout(self)
-        self.grid_layout.setGeometry(self.checkerboard.geometry())
+        self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.grid_layout.setSizeConstraint(Qt.QGridLayout.SizeConstraint.SetFixedSize)
         self.grid_layout.setVerticalSpacing(0)
         self.grid_layout.setHorizontalSpacing(0)
 
-        # add draggable items to one frame
+        # add draggable items
         for column in range(0, 8):
-            for row in range(0, 8):
+            for row in [0, 1, 6, 7]:
                 sprite = QtGui.QPixmap(r'src\sprites\rook.png')
-                button = ChessPiece(sprite=sprite)
+                button = ChessPiece(square_size, sprite)
                 self.grid_layout.addWidget(button, row, column)
-                self.grid_layout.setColumnMinimumWidth(column, 10)
-                self.grid_layout.setRowMinimumHeight(column, 10)
+                self.grid_layout.setColumnMinimumWidth(column, square_size.width())
+                self.grid_layout.setRowMinimumHeight(column, square_size.height())
 
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
@@ -88,7 +91,7 @@ class Board(Qt.QWidget):
 
 
 class ChessPiece(QtWidgets.QLabel):
-    def __init__(self, fix_size=QtCore.QSize(100, 100), sprite=None):
+    def __init__(self, fix_size=QtCore.QSize(100, 100), sprite: Qt.QPixmap = None):
         super().__init__()
 
         # set size policy
@@ -101,7 +104,7 @@ class ChessPiece(QtWidgets.QLabel):
         self.fix_size = fix_size
 
         # set up sprite
-        self.setPixmap(sprite)
+        self.setPixmap(sprite.scaled(fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
         self.setScaledContents(True)
 
     def sizeHint(self) -> QtCore.QSize:
