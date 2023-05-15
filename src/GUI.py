@@ -68,6 +68,7 @@ class Board(Qt.QWidget):
 
         # add grid layout
         self.grid_layout = QtWidgets.QGridLayout(self)
+        self.grid_layout.setGeometry(self.checkerboard.geometry())
         self.grid_layout.setVerticalSpacing(0)
         self.grid_layout.setHorizontalSpacing(0)
 
@@ -77,6 +78,8 @@ class Board(Qt.QWidget):
                 sprite = QtGui.QPixmap(r'src\sprites\rook.png')
                 button = ChessPiece(sprite=sprite)
                 self.grid_layout.addWidget(button, row, column)
+                self.grid_layout.setColumnMinimumWidth(column, 10)
+                self.grid_layout.setRowMinimumHeight(column, 10)
 
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
@@ -85,7 +88,7 @@ class Board(Qt.QWidget):
 
 
 class ChessPiece(QtWidgets.QLabel):
-    def __init__(self, min_size=QtCore.QSize(10, 10), sprite=None):
+    def __init__(self, fix_size=QtCore.QSize(100, 100), sprite=None):
         super().__init__()
 
         # set size policy
@@ -95,11 +98,11 @@ class ChessPiece(QtWidgets.QLabel):
 
         self.setSizePolicy(policy)
 
-        self.min_size = min_size
+        self.fix_size = fix_size
 
         # set up sprite
         self.setPixmap(sprite)
         self.setScaledContents(True)
 
     def sizeHint(self) -> QtCore.QSize:
-        return self.min_size
+        return self.fix_size
