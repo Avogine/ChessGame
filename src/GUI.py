@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtWidgets, QtGui, Qt
+import engine
 
 class GUI(QtWidgets.QApplication):
     def __init__(self):
@@ -14,7 +15,11 @@ class GUI(QtWidgets.QApplication):
 
         self.window.setLayout(self.vboxlayout)
         self.window.show()
+        self.window.setWindowTitle('ChessGame')
         self.exec()
+
+        # make playboard_engine instance
+        self.engine_board = engine.Spielfeld()
 
 
 class Checkerboard(QtWidgets.QWidget):
@@ -60,8 +65,6 @@ class Board(Qt.QWidget):
     def __init__(self, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"), square_size=Qt.QSize(100, 100)):
         super().__init__()
 
-        # TODO: set minimum width and height for each column
-
         # add background
         self.checkerboard = Checkerboard(parent=self)
         self.checkerboard.show()
@@ -76,7 +79,7 @@ class Board(Qt.QWidget):
         # add draggable items
         for column in range(0, 8):
             for row in [0, 1, 6, 7]:
-                sprite = QtGui.QPixmap(r'src\sprites\rook.png')
+                sprite = QtGui.QPixmap(r'src\sprites\pawn.png')
                 button = ChessPiece(square_size, sprite)
                 self.grid_layout.addWidget(button, row, column)
                 self.grid_layout.setColumnMinimumWidth(column, square_size.width())
