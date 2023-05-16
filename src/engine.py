@@ -62,13 +62,13 @@ class Spielfeld:
             pass
         elif piece_num == 1: # moves für w.Bauer
             if self.return_figur(pos-10) == 0: # checkt 1 Feld davor
-                ret.append((pos-10))
+                ret.append(pos-10)
 
                 if self.return_figur(pos - 20) == 0: # checkt 2 Felder davor
-                    ret.append((pos - 20))
+                    ret.append(pos - 20)
 
             if self.is_white(self.return_figur(pos - 9)): # checkt Feld rechts vorne auf Gegner
-                ret.append((pos - 9))
+                ret.append(pos - 9)
 
             if self.is_white(self.return_figur(pos - 11)): # checkt Feld links vorne auf Gegner
                 ret.append((pos - 11))
@@ -129,6 +129,8 @@ class Spielfeld:
                     new_pos =+ i
                 if self.isnt_samecolor(self.return_figur(pos), self.return_figur(new_pos + i)):
                     ret.append(new_pos + i)
+
+
 
 
         else:

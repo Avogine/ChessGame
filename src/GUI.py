@@ -1,6 +1,4 @@
 from PyQt5 import QtCore, QtWidgets, QtGui, Qt
-import os
-
 
 class GUI(QtWidgets.QApplication):
     def __init__(self):
@@ -78,7 +76,7 @@ class Board(Qt.QWidget):
         # add draggable items
         for column in range(0, 8):
             for row in [0, 1, 6, 7]:
-                sprite = QtGui.QPixmap(r'src\sprites\rook.png')
+                sprite = QtGui.QPixmap(r'../src/sprites/rook.png')
                 button = ChessPiece(square_size, sprite)
                 self.grid_layout.addWidget(button, row, column)
                 self.grid_layout.setColumnMinimumWidth(column, square_size.width())
@@ -89,19 +87,26 @@ class Board(Qt.QWidget):
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
 
-    def dragEnterEvent(self, a0: QtGui.QDragEnterEvent) -> None:
-        pass
-        # spawn new draggable object
+    def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
+        # action needs to be accepted for dropEvent to be called
+        text = event.mimeData().text().split('|', 3)
 
-        # mark position as selected
+        if text[0] == 'position':
+            event.acceptProposedAction()
 
     def dropEvent(self, event: QtGui.QDropEvent) -> None:
-        if event.mimeData().hasFormat('application/x-dnditemdata'):
-            itemdata = event.mimeData().data('application/x-dnditemdata')
-            datastream = QtCore.QDataStream(itemdata, QtCore.QIODevice.OpenModeFlag.ReadOnly)
+        if event.mimeData().hasText():
+            string = event.mimeData().text()
 
+            key, x, y = string.split('|', 2)
+            print(string)
 
+            pos = [int(x), int(y)]
 
+            new_pos = self.grid_layout.p.pos()
+
+            old_piece = self.grid_layout.itemAtPosition(y, x)
+            self.grid_layout.addWidget(old_piece, )
 
 
     def dragMoveEvent(self, a0: QtGui.QDragMoveEvent) -> None:
@@ -116,11 +121,11 @@ class Board(Qt.QWidget):
             pixmap = child.pixmap()
 
             # construct data stream
-            itemdata = QtCore.QByteArray()
-            datastream = QtCore.QDataStream(itemdata, QtCore.QIODevice.OpenModeFlag.WriteOnly)
-            datastream << QtCore.QPoint(event.pos() - child.pos())
             mimeData = Qt.QMimeData()
-            mimeData.setData('application/x-dnditemdata', itemdata)
+            piece_idx = self.grid_layout.indexOf(child)
+            piece_pos = self.grid_layout.getItemPosition(piece_idx)
+            piece_pos_string = 'position|' + str(piece_pos[0]) + '|' + str(piece_pos[1])
+            mimeData.setText(piece_pos_string)
 
             # create drag object
             drag = Qt.QDrag(self)
