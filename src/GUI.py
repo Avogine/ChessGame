@@ -76,7 +76,7 @@ class Board(Qt.QWidget):
         # add draggable items
         for column in range(0, 8):
             for row in [0, 1, 6, 7]:
-                sprite = QtGui.QPixmap(r'../src/sprites/rook.png')
+                sprite = QtGui.QPixmap(r'src\sprites\rook.png')
                 button = ChessPiece(square_size, sprite)
                 self.grid_layout.addWidget(button, row, column)
                 self.grid_layout.setColumnMinimumWidth(column, square_size.width())
@@ -89,29 +89,31 @@ class Board(Qt.QWidget):
 
     def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
         # action needs to be accepted for dropEvent to be called
-        text = event.mimeData().text().split('|', 3)
-
-        if text[0] == 'position':
+        if event.mimeData().hasFormat('application/chessgame-drag'):
             event.acceptProposedAction()
 
     def dropEvent(self, event: QtGui.QDropEvent) -> None:
-        if event.mimeData().hasText():
-            string = event.mimeData().text()
+        if event.mimeData().hasFormat('application/chessgame-drag'):
+            data = event.mimeData().data('application/chessgame-drag').data()
+            string = data.decode('UTF-8')
 
             key, x, y = string.split('|', 2)
-            print(string)
+            x = int(x)
+            y = int(y)
 
-            pos = [int(x), int(y)]
+            # get new position to put in
+            grid_corner = self.grid_layout.contentsRect().topLeft()
+            grid_size = self.grid_layout.contentsRect().size()
 
-            new_pos = self.grid_layout.p.pos()
+            mouse_normalized = event.pos() - grid_corner
+            new_column = int(((mouse_normalized.x() / grid_size.width()) * 8))
+            new_row = int(((mouse_normalized.y() / grid_size.height()) * 8))
 
-            old_piece = self.grid_layout.itemAtPosition(y, x)
-            self.grid_layout.addWidget(old_piece, )
-
-
-    def dragMoveEvent(self, a0: QtGui.QDragMoveEvent) -> None:
-        pass
-        # update position
+            old_piece = self.grid_layout.itemAtPosition(x, y)
+            old_piece_widget = old_piece.widget()
+            self.grid_layout.removeItem(old_piece)
+            self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
+            old_piece_widget.show()
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         # get child from position
@@ -121,15 +123,16 @@ class Board(Qt.QWidget):
             pixmap = child.pixmap()
 
             # construct data stream
-            mimeData = Qt.QMimeData()
+            mimedata = Qt.QMimeData()
             piece_idx = self.grid_layout.indexOf(child)
             piece_pos = self.grid_layout.getItemPosition(piece_idx)
             piece_pos_string = 'position|' + str(piece_pos[0]) + '|' + str(piece_pos[1])
-            mimeData.setText(piece_pos_string)
+            piece_pos_bytes = piece_pos_string.encode("UTF-8")
+            mimedata.setData('application/chessgame-drag', piece_pos_bytes)
 
             # create drag object
             drag = Qt.QDrag(self)
-            drag.setMimeData(mimeData)
+            drag.setMimeData(mimedata)
             drag.setPixmap(pixmap)
             drag.setHotSpot(event.pos() - child.pos())
 
@@ -138,8 +141,6 @@ class Board(Qt.QWidget):
 
             # execute
             drag.exec()
-
-
 
     print("Created GUI.")
 
