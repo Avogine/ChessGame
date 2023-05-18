@@ -108,15 +108,17 @@ class Board(Qt.QWidget):
             grid_corner = self.grid_layout.contentsRect().topLeft()
             grid_size = self.grid_layout.contentsRect().size()
 
-            mouse_normalized = event.pos() - grid_corner
-            new_column = int(((mouse_normalized.x() / grid_size.width()) * 8))
-            new_row = int(((mouse_normalized.y() / grid_size.height()) * 8))
+            print("DROP")
+            # HACK: this helps to avoid a division by zero
+            if not grid_size.isEmpty():
+                mouse_normalized = event.pos() - grid_corner
+                new_column = int(((mouse_normalized.x() / grid_size.width()) * 8))
+                new_row = int(((mouse_normalized.y() / grid_size.height()) * 8))
 
-            old_piece = self.grid_layout.itemAtPosition(x, y)
-            old_piece_widget = old_piece.widget()
-            self.grid_layout.removeItem(old_piece)
-            self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
-            old_piece_widget.show()
+                old_piece = self.grid_layout.itemAtPosition(x, y)
+                old_piece_widget = old_piece.widget()
+                self.grid_layout.removeItem(old_piece)
+                self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         # get child from position
@@ -143,7 +145,11 @@ class Board(Qt.QWidget):
             child.hide()
 
             # execute
+            print("Press")
             drag.exec()
+
+            # clean up
+            child.show()
 
     print("Created GUI.")
 
