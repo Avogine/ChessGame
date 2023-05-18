@@ -89,6 +89,35 @@ class Board(Qt.QWidget):
 
         self.setAcceptDrops(True)
 
+        # variables
+        self.selected_piece = (-1, -1)
+
+    def set_selected_piece(self, piece_pos=(0, 0), selected=True):
+        new_selected_widget: ChessPiece = self.grid_layout.itemAtPosition(piece_pos[1], piece_pos[0]).widget()
+
+        # deselect, even if we might select it again
+        if self.selected_piece != (-1, -1):
+            last_selected_widget: ChessPiece = self.grid_layout.itemAtPosition(self.selected_piece[1], self.selected_piece[0]).widget()
+            last_selected_widget.set_select(False)
+
+        # select or deselect new one
+        if selected:
+            self.selected_piece = piece_pos
+            new_selected_widget.set_select(True)
+        else:
+            self.selected_piece = (-1, -1)
+            new_selected_widget.set_select(False)
+            print("deselect", new_selected_widget, self.selected_piece)
+
+    def invert_piece_selection(self, piece_pos=(0, 0)):
+        # check if piece is already selected
+        if self.selected_piece == piece_pos:
+            self.set_selected_piece(piece_pos, False)
+            print("Is same")
+        else:
+            self.set_selected_piece(piece_pos, True)
+            print("Is other")
+
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
 
@@ -102,12 +131,11 @@ class Board(Qt.QWidget):
             data = event.mimeData().data('application/chessgame-drag').data()
             string = data.decode('UTF-8')
 
-            key, x, y = string.split('|', 2)
-            x = int(x)
-            y = int(y)
+            key, old_column, old_row = string.split('|', 2)
+            old_column = int(old_column)
+            old_row = int(old_row)
 
             # get new position to put in
-            gl = self.grid_layout
             # grid_corner = self.grid_layout.geometry()  # not needed, as event position is always relative to widget
             grid_size = self.grid_layout.sizeHint()  # this needs to use sizeHint, as .geometry() sometimes returns zero
 
@@ -115,7 +143,13 @@ class Board(Qt.QWidget):
             new_column = int(((mouse_normalized.x() / grid_size.width()) * 8))
             new_row = int(((mouse_normalized.y() / grid_size.height()) * 8))
 
-            old_piece = self.grid_layout.itemAtPosition(x, y)
+            # check if old position equals new position
+            if old_column == new_column and old_row == new_row:  # piece was not moved, but selected
+                self.invert_piece_selection((new_column, new_row))
+            else: # other piece was moved, deselect
+                self.set_selected_piece((0, 0), False)
+
+            old_piece = self.grid_layout.itemAtPosition(old_row, old_column)
             old_piece_widget = old_piece.widget()
             self.grid_layout.removeItem(old_piece)
             self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
@@ -125,13 +159,13 @@ class Board(Qt.QWidget):
         child = self.childAt(event.pos())
         if isinstance(child, ChessPiece):
             # get pixmap
-            pixmap = child.pixmap()
+            pixmap = child.get_drag_sprite()
 
             # construct data stream
             mimedata = Qt.QMimeData()
             piece_idx = self.grid_layout.indexOf(child)
             piece_pos = self.grid_layout.getItemPosition(piece_idx)
-            piece_pos_string = 'position|' + str(piece_pos[0]) + '|' + str(piece_pos[1])
+            piece_pos_string = 'position|' + str(piece_pos[1]) + '|' + str(piece_pos[0])
             piece_pos_bytes = piece_pos_string.encode("UTF-8")
             mimedata.setData('application/chessgame-drag', piece_pos_bytes)
 
@@ -168,12 +202,30 @@ class ChessPiece(QtWidgets.QLabel):
         self.fix_size = fix_size
 
         # set up sprite
-        self.setPixmap(sprite.scaled(fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
-                                     QtCore.Qt.TransformationMode.SmoothTransformation))
-        self.setScaledContents(True)
+        self.sprite = sprite
+        self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+        self.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         # set dragging
         self.setAcceptDrops(True)
 
+        # variables
+        self.selected = False
+
     def sizeHint(self) -> QtCore.QSize:
         return self.fix_size
+
+    def get_drag_sprite(self):
+        return self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+
+    def set_select(self, selected=True):
+        print("work", selected)
+
+        if self.selected and not selected:
+            # scale pixmap to original size
+            self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+        elif not self.selected and selected:
+            # scale pixmap to indicate selection
+            self.setPixmap(self.sprite.scaled(self.fix_size * 0.5, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+
+        self.selected = selected
