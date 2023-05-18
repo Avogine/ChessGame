@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 import engine
 
+
 class GUI(QtWidgets.QApplication):
     def __init__(self):
         super().__init__([])
@@ -62,7 +63,8 @@ class Checkerboard(QtWidgets.QWidget):
 
 
 class Board(Qt.QWidget):
-    def __init__(self, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"), square_size=Qt.QSize(100, 100)):
+    def __init__(self, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"),
+                 square_size=Qt.QSize(100, 100)):
         super().__init__()
 
         # add background
@@ -105,20 +107,18 @@ class Board(Qt.QWidget):
             y = int(y)
 
             # get new position to put in
-            grid_corner = self.grid_layout.contentsRect().topLeft()
-            grid_size = self.grid_layout.contentsRect().size()
+            gl = self.grid_layout
+            # grid_corner = self.grid_layout.geometry()  # not needed, as event position is always relative to widget
+            grid_size = self.grid_layout.sizeHint()  # this needs to use sizeHint, as .geometry() sometimes returns zero
 
-            print("DROP")
-            # HACK: this helps to avoid a division by zero
-            if not grid_size.isEmpty():
-                mouse_normalized = event.pos() - grid_corner
-                new_column = int(((mouse_normalized.x() / grid_size.width()) * 8))
-                new_row = int(((mouse_normalized.y() / grid_size.height()) * 8))
+            mouse_normalized = event.pos()
+            new_column = int(((mouse_normalized.x() / grid_size.width()) * 8))
+            new_row = int(((mouse_normalized.y() / grid_size.height()) * 8))
 
-                old_piece = self.grid_layout.itemAtPosition(x, y)
-                old_piece_widget = old_piece.widget()
-                self.grid_layout.removeItem(old_piece)
-                self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
+            old_piece = self.grid_layout.itemAtPosition(x, y)
+            old_piece_widget = old_piece.widget()
+            self.grid_layout.removeItem(old_piece)
+            self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         # get child from position
@@ -168,7 +168,8 @@ class ChessPiece(QtWidgets.QLabel):
         self.fix_size = fix_size
 
         # set up sprite
-        self.setPixmap(sprite.scaled(fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
+        self.setPixmap(sprite.scaled(fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                                     QtCore.Qt.TransformationMode.SmoothTransformation))
         self.setScaledContents(True)
 
         # set dragging
