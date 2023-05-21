@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 import engine
+import helpers
 
 
 class GUI(QtWidgets.QApplication):
@@ -81,8 +82,8 @@ class Board(Qt.QWidget):
         # add draggable items
         for column in range(0, 8):
             for row in [0, 1, 6, 7]:
-                sprite = QtGui.QPixmap(r'src\sprites\pawn.png')
-                button = ChessPiece(square_size, sprite)
+                sprite = QtGui.QPixmap(r'../src/sprites/pawn.png')
+                button = ChessPiece(square_size, 2)
                 self.grid_layout.addWidget(button, row, column)
                 self.grid_layout.setColumnMinimumWidth(column, square_size.width())
                 self.grid_layout.setRowMinimumHeight(column, square_size.height())
@@ -91,6 +92,14 @@ class Board(Qt.QWidget):
 
         # variables
         self.selected_piece = (-1, -1)
+
+    def remove_hints(self, piece_pos):
+        pass
+        # TODO: remove all hints here
+
+    def update_hints(self, piece_pos):
+        pass
+        # TODO: first remvove all, then create new hints
 
     def set_selected_piece(self, piece_pos=(0, 0), selected=True):
         new_selected_widget: ChessPiece = self.grid_layout.itemAtPosition(piece_pos[1], piece_pos[0]).widget()
@@ -108,6 +117,9 @@ class Board(Qt.QWidget):
             self.selected_piece = (-1, -1)
             new_selected_widget.set_select(False)
             print("deselect", new_selected_widget, self.selected_piece)
+
+        # TODO: update move hints
+        # update hints on where to move
 
     def invert_piece_selection(self, piece_pos=(0, 0)):
         # check if piece is already selected
@@ -189,7 +201,7 @@ class Board(Qt.QWidget):
 
 
 class ChessPiece(QtWidgets.QLabel):
-    def __init__(self, fix_size=QtCore.QSize(100, 100), sprite: Qt.QPixmap = None):
+    def __init__(self, fix_size=QtCore.QSize(100, 100), piece_type=1):
         super().__init__()
 
         # set size policy
@@ -202,8 +214,7 @@ class ChessPiece(QtWidgets.QLabel):
         self.fix_size = fix_size
 
         # set up sprite
-        self.sprite = sprite
-        self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+        self.sprite = None
         self.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         # set dragging
@@ -211,6 +222,13 @@ class ChessPiece(QtWidgets.QLabel):
 
         # variables
         self.selected = False
+        self.piece_type = piece_type  # piece types have specific format
+        self.set_type(piece_type)
+
+        # piece types: pawn knight bishop rook queen king
+        # white:       1    3      5      7    9     11
+        # black:       2    4      6      8    10    12
+        # 13: invalid / wall
 
     def sizeHint(self) -> QtCore.QSize:
         return self.fix_size
@@ -229,3 +247,22 @@ class ChessPiece(QtWidgets.QLabel):
             self.setPixmap(self.sprite.scaled(self.fix_size * 0.5, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
         self.selected = selected
+
+    def set_type(self, piece_type=0):
+        if 0 <= piece_type <= 12:
+            self.piece_type = piece_type
+
+            # set new icon
+            path = helpers.get_piece_sprite_path(piece_type)
+            self.sprite = Qt.QPixmap(str(path))
+            print(str(path))
+
+            # TODO: maybe remove unnecessary double code (see above, used there too)
+            if self.selected:
+                # scale pixmap to indicate selection
+                self.setPixmap(self.sprite.scaled(self.fix_size * 0.5, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                                                  QtCore.Qt.TransformationMode.SmoothTransformation))
+            else:
+                # scale pixmap to original size
+                self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                                                  QtCore.Qt.TransformationMode.SmoothTransformation))
