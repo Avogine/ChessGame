@@ -18,10 +18,15 @@ class GUI(QtWidgets.QApplication):
         self.window.setLayout(self.vboxlayout)
         self.window.show()
         self.window.setWindowTitle('ChessGame')
-        self.exec()
-
         # make playboard_engine instance
         self.engine_board = engine.Spielfeld()
+        self.board.update_from_list(self.engine_board.board)
+
+
+        # run
+        self.exec()
+
+
 
 
 class Checkerboard(QtWidgets.QWidget):
@@ -83,7 +88,7 @@ class Board(Qt.QWidget):
         for column in range(0, 8):
             for row in [0, 1, 6, 7]:
                 sprite = QtGui.QPixmap(r'../src/sprites/pawn.png')
-                button = ChessPiece(square_size, 2)
+                button = ChessPiece(square_size, 3)
                 self.grid_layout.addWidget(button, row, column)
                 self.grid_layout.setColumnMinimumWidth(column, square_size.width())
                 self.grid_layout.setRowMinimumHeight(column, square_size.height())
@@ -92,6 +97,33 @@ class Board(Qt.QWidget):
 
         # variables
         self.selected_piece = (-1, -1)
+
+    def update_from_list(self, board_list=None):
+        own_idx = 0
+        engine_idx = 0
+        if board_list is not None:
+            for piece in board_list:
+                if piece != 13 and piece != 0:
+                    # calculate row and column
+                    row = int(own_idx / 8)
+                    column = own_idx % 8
+                    print(piece)
+                    self.set_piece(row, column, piece)
+                    own_idx += 1
+
+                engine_idx += 1
+
+    def set_piece(self, row=0, column=0, piece_id=0):
+        # remove piece
+        item = self.grid_layout.itemAtPosition(row, column)
+        item_widget = ChessPiece(piece_type=piece_id)
+
+        if item:  # check to avoid None
+            item_widget = item.widget()
+            self.grid_layout.removeItem(item)
+
+        else:  # set the piece
+            self.grid_layout.addWidget(item_widget)
 
     def remove_hints(self, piece_pos):
         pass
@@ -125,10 +157,8 @@ class Board(Qt.QWidget):
         # check if piece is already selected
         if self.selected_piece == piece_pos:
             self.set_selected_piece(piece_pos, False)
-            print("Is same")
         else:
             self.set_selected_piece(piece_pos, True)
-            print("Is other")
 
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
@@ -158,13 +188,13 @@ class Board(Qt.QWidget):
             # check if old position equals new position
             if old_column == new_column and old_row == new_row:  # piece was not moved, but selected
                 self.invert_piece_selection((new_column, new_row))
-            else: # other piece was moved, deselect
+            else:  # other piece was moved, deselect
                 self.set_selected_piece((0, 0), False)
 
-            old_piece = self.grid_layout.itemAtPosition(old_row, old_column)
-            old_piece_widget = old_piece.widget()
-            self.grid_layout.removeItem(old_piece)
-            self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
+                old_piece = self.grid_layout.itemAtPosition(old_row, old_column)
+                old_piece_widget = old_piece.widget()
+                self.grid_layout.removeItem(old_piece)
+                self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         # get child from position
@@ -191,7 +221,6 @@ class Board(Qt.QWidget):
             child.hide()
 
             # execute
-            print("Press")
             drag.exec()
 
             # clean up
@@ -237,8 +266,6 @@ class ChessPiece(QtWidgets.QLabel):
         return self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
 
     def set_select(self, selected=True):
-        print("work", selected)
-
         if self.selected and not selected:
             # scale pixmap to original size
             self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
@@ -255,7 +282,6 @@ class ChessPiece(QtWidgets.QLabel):
             # set new icon
             path = helpers.get_piece_sprite_path(piece_type)
             self.sprite = Qt.QPixmap(str(path))
-            print(str(path))
 
             # TODO: maybe remove unnecessary double code (see above, used there too)
             if self.selected:
