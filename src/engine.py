@@ -136,3 +136,21 @@ class Spielfeld:
         else:
             pass
         return(ret)
+
+
+class Piece():
+
+    def __init__(self, kind, pos, id):
+        self.kind = kind
+        self.pos = pos
+        self.id = id
+
+    def pos_moves(self):
+        pass
+
+    def move(self):
+        pass
+
+
+class Pawn(Piece):
+
