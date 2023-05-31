@@ -1,0 +1,3 @@
+### LICENSES FOR FILES ###
+
+chess pieces: https://opengameart.org/content/chess-pieces from "Anonymous" [CC0]
