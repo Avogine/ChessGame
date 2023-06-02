@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from colorama import *
 piece_sprite_path = [
     None,
     "white_pawn.png",
@@ -18,6 +18,8 @@ piece_sprite_path = [
 
 sprites_path = Path(r'../src/sprites')
 
+
+"""♙♟♘♞♗♝♖♜♕♛♔♚"""
 
 def get_piece_name(idx=0):
     return piece_sprite_path[idx]
