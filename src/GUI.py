@@ -48,9 +48,9 @@ class Checkerboard(QtWidgets.QWidget):
                 is_even = ((row + column) % 2) == 0  # yes I'm very proud of this line right here...
 
                 if is_even:
-                    color = self.color_dark
-                else:
                     color = self.color_bright
+                else:
+                    color = self.color_dark
 
                 x = column * self.square_size
                 y = row * self.square_size
@@ -223,8 +223,6 @@ class Board(Qt.QWidget):
 
             # clean up
             child.show()
-
-    print("Created GUI.")
 
 
 class ChessPiece(QtWidgets.QLabel):

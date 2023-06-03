@@ -13,7 +13,7 @@ piece_sprite_path = [
     "white_queen.png",
     "black_queen.png",
     "white_king.png",
-    "white_queen.png"
+    "white_king.png"
 ]
 
 sprites_path = Path(r'../src/sprites')
