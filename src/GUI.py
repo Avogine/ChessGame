@@ -19,9 +19,8 @@ class GUI(QtWidgets.QApplication):
         self.window.show()
         self.window.setWindowTitle('ChessGame')
         # make playboard_engine instance
-        self.engine_board = engine.Spielfeld()
-        self.board.update_from_list(self.engine_board.board)
-
+        self.chess_board = engine.Chessboard()
+        self.board.update_from_list(self.chess_board.board)
 
         # run
         self.exec()
@@ -31,7 +30,7 @@ class GUI(QtWidgets.QApplication):
 
 class Checkerboard(QtWidgets.QWidget):
     def __init__(self, parent=None, color_bright=QtGui.QColor("#ffffff"), color_dark=QtGui.QColor("#5f8231"),
-                 square_size=100):
+                 square_size=50):
         super().__init__(parent=parent)
 
         self.color_bright = color_bright
@@ -70,7 +69,7 @@ class Checkerboard(QtWidgets.QWidget):
 
 class Board(Qt.QWidget):
     def __init__(self, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"),
-                 square_size=Qt.QSize(100, 100)):
+                 square_size=Qt.QSize(50, 50)):
         super().__init__()
 
         # add background
@@ -84,16 +83,12 @@ class Board(Qt.QWidget):
         self.grid_layout.setVerticalSpacing(0)
         self.grid_layout.setHorizontalSpacing(0)
 
-        # add draggable items
-        for column in range(0, 8):
-            for row in [0, 1, 6, 7]:
-                sprite = QtGui.QPixmap(r'../src/sprites/pawn.png')
-                button = ChessPiece(square_size, 3)
-                self.grid_layout.addWidget(button, row, column)
-                self.grid_layout.setColumnMinimumWidth(column, square_size.width())
-                self.grid_layout.setRowMinimumHeight(column, square_size.height())
-
         self.setAcceptDrops(True)
+
+        # set minimum width and height, else the layout just collapses
+        for i in range(8):
+            self.grid_layout.setColumnMinimumWidth(i, 50) # TODO: use variables for minimum size
+            self.grid_layout.setRowMinimumHeight(i, 50)
 
         # variables
         self.selected_piece = (-1, -1)
@@ -103,12 +98,13 @@ class Board(Qt.QWidget):
         engine_idx = 0
         if board_list is not None:
             for piece in board_list:
-                if piece != 13 and piece != 0:
+                if piece != 13:
                     # calculate row and column
                     row = int(own_idx / 8)
                     column = own_idx % 8
-                    print(piece)
-                    self.set_piece(row, column, piece)
+                    print(row, column)
+                    if piece != 0:
+                        self.set_piece(row, column, piece)
                     own_idx += 1
 
                 engine_idx += 1
@@ -118,12 +114,12 @@ class Board(Qt.QWidget):
         item = self.grid_layout.itemAtPosition(row, column)
         item_widget = ChessPiece(piece_type=piece_id)
 
-        if item:  # check to avoid None
+        if item:  # check to avoid None, then remove
             item_widget = item.widget()
             self.grid_layout.removeItem(item)
 
         else:  # set the piece
-            self.grid_layout.addWidget(item_widget)
+            self.grid_layout.addWidget(item_widget, row, column)
 
     def remove_hints(self, piece_pos):
         pass
@@ -193,6 +189,8 @@ class Board(Qt.QWidget):
 
                 old_piece = self.grid_layout.itemAtPosition(old_row, old_column)
                 old_piece_widget = old_piece.widget()
+
+                # move item from old to new position
                 self.grid_layout.removeItem(old_piece)
                 self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
 
@@ -230,7 +228,7 @@ class Board(Qt.QWidget):
 
 
 class ChessPiece(QtWidgets.QLabel):
-    def __init__(self, fix_size=QtCore.QSize(100, 100), piece_type=1):
+    def __init__(self, fix_size=QtCore.QSize(50, 50), piece_type=1):
         super().__init__()
 
         # set size policy
