@@ -1,5 +1,6 @@
 from pathlib import Path
 from colorama import *
+
 piece_sprite_path = [
     None,
     "white_pawn.png",
@@ -27,3 +28,8 @@ def get_piece_name(idx=0):
 
 def get_piece_sprite_path(idx=0):
     return Path(sprites_path, get_piece_name(idx))
+
+
+def int_to_rowcolumn(int_pos = 0, rowcount = 8, colcount = 8) -> tuple:
+    row = int(int_pos / colcount)
+    column = int_pos % rowcount

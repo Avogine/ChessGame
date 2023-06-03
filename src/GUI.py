@@ -26,6 +26,31 @@ class GUI(QtWidgets.QApplication):
         self.exec()
 
 
+class HintGrid(QtWidgets.QWidget):
+    def __init__(self, parent=None, square_size=Qt.QSize(50, 50)):
+        super().__init__(parent=parent)
+
+        # variables
+        self.square_size = square_size
+
+        # set up grid layout
+        self.grid_layout = QtWidgets.QGridLayout(self)
+        self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.grid_layout.setSizeConstraint(Qt.QGridLayout.SizeConstraint.SetFixedSize)
+        self.grid_layout.setVerticalSpacing(0)
+        self.grid_layout.setHorizontalSpacing(0)
+
+        # set minimum width and height, else the layout just collapses
+        for i in range(8):
+            self.grid_layout.setColumnMinimumWidth(i, self.square_size.width()) # TODO: use variables for minimum size
+            self.grid_layout.setRowMinimumHeight(i, self.square_size.height())
+
+    def sizeHint(self) -> Qt.QSize:
+        return self.square_size
+    
+    def set_hints(self, hint_list):
+        pass
+
 
 
 class Checkerboard(QtWidgets.QWidget):
@@ -72,9 +97,14 @@ class Board(Qt.QWidget):
                  square_size=Qt.QSize(50, 50)):
         super().__init__()
 
+        self.square_size = square_size
+
         # add background
         self.checkerboard = Checkerboard(parent=self)
         self.checkerboard.show()
+
+        # add grid layout behind true pieces for hints
+        self.hint_grid = HintGrid(self, square_size)
 
         # add grid layout
         self.grid_layout = QtWidgets.QGridLayout(self)
@@ -83,12 +113,14 @@ class Board(Qt.QWidget):
         self.grid_layout.setVerticalSpacing(0)
         self.grid_layout.setHorizontalSpacing(0)
 
+        #self.grid_layout.setGeometry(QtCore.QRect(0, 0, self.square_size.width(), self.square_size.height())) # not sure if needed
+
         self.setAcceptDrops(True)
 
         # set minimum width and height, else the layout just collapses
         for i in range(8):
-            self.grid_layout.setColumnMinimumWidth(i, 50) # TODO: use variables for minimum size
-            self.grid_layout.setRowMinimumHeight(i, 50)
+            self.grid_layout.setColumnMinimumWidth(i, self.square_size.width()) # TODO: use variables for minimum size
+            self.grid_layout.setRowMinimumHeight(i, self.square_size.height())
 
         # variables
         self.selected_piece = (-1, -1)
@@ -122,8 +154,9 @@ class Board(Qt.QWidget):
             self.grid_layout.addWidget(item_widget, row, column)
 
     def remove_hints(self, piece_pos):
-        pass
-        # TODO: remove all hints here
+        for child in self.hint_grid.children:
+            child.remove()
+
 
     def update_hints(self, piece_pos):
         pass
