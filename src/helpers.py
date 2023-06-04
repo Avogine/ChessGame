@@ -14,7 +14,7 @@ piece_sprite_path = [
     "white_queen.png",
     "black_queen.png",
     "white_king.png",
-    "white_king.png"
+    "black_king.png"
 ]
 
 sprites_path = Path(r'../src/sprites')
@@ -28,6 +28,10 @@ def get_piece_name(idx=0):
 
 def get_piece_sprite_path(idx=0):
     return Path(sprites_path, get_piece_name(idx))
+
+
+def get_marker_sprite_path():
+    return Path(sprites_path, "marker.png")
 
 
 def int_to_rowcolumn(int_pos=0, rowcount=8, colcount=8) -> tuple:
