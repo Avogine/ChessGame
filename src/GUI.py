@@ -11,27 +11,31 @@ class GUI(QtWidgets.QApplication):
         self.hboxlayout = QtWidgets.QHBoxLayout()  # this second layout stores the board and controls
         self.vboxlayout.addLayout(self.hboxlayout)
 
+        # make playboard_engine instance
+        self.chess_board = engine.Chessboard()
+
         # add board to second layout
-        self.board = Board()
+        self.board = Board(self.chess_board)
         self.hboxlayout.addWidget(self.board)
 
         self.window.setLayout(self.vboxlayout)
         self.window.show()
         self.window.setWindowTitle('ChessGame')
-        # make playboard_engine instance
-        self.chess_board = engine.Chessboard()
-        self.board.update_from_list(self.chess_board.board)
 
+        # fill board
+        self.board.update_from_list(self.chess_board.board)
+        
         # run
         self.exec()
 
 
 class HintGrid(QtWidgets.QWidget):
-    def __init__(self, parent=None, square_size=Qt.QSize(50, 50)):
+    def __init__(self, parent, chess_board: engine.Chessboard, square_size=Qt.QSize(50, 50)):
         super().__init__(parent=parent)
 
         # variables
         self.square_size = square_size
+        self.chess_board = chess_board
 
         # set up grid layout
         self.grid_layout = QtWidgets.QGridLayout(self)
@@ -48,8 +52,28 @@ class HintGrid(QtWidgets.QWidget):
     def sizeHint(self) -> Qt.QSize:
         return self.square_size
     
-    def set_hints(self, hint_list):
-        pass
+    def set_hints(self, piece_pos: int):
+        # get all necessary values
+        # all even numbers correspond to black moves
+        # all uneven numbers are white moves
+
+        movecount = self.chess_board.movecount
+        white_moving = bool(movecount % 2)
+        piece_type = self.chess_board.return_figur(piece_pos)
+
+        if engine.is_white(piece_type) == white_moving:
+            legal_moves = self.chess_board.check_pos_moves(piece_pos)
+
+            # remove all old hints
+            for i in range(63):
+                row, column = helpers.int_to_rowcolumn(i)
+                item = self.grid_layout.itemAtPosition(row, column)
+                if item != None:
+                    self.grid_layout.removeItem(item)
+                    del item # not sure if needed but lets hope this works
+
+            for move in legal_moves:
+                widget = self.
 
 
 
@@ -93,18 +117,19 @@ class Checkerboard(QtWidgets.QWidget):
 
 
 class Board(Qt.QWidget):
-    def __init__(self, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"),
+    def __init__(self, chess_board, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"),
                  square_size=Qt.QSize(50, 50)):
         super().__init__()
 
         self.square_size = square_size
+        self.chess_board = chess_board
 
         # add background
         self.checkerboard = Checkerboard(parent=self)
         self.checkerboard.show()
 
         # add grid layout behind true pieces for hints
-        self.hint_grid = HintGrid(self, square_size)
+        self.hint_grid = HintGrid(self, self.chess_board, square_size)
 
         # add grid layout
         self.grid_layout = QtWidgets.QGridLayout(self)
@@ -114,7 +139,6 @@ class Board(Qt.QWidget):
         self.grid_layout.setHorizontalSpacing(0)
 
         #self.grid_layout.setGeometry(QtCore.QRect(0, 0, self.square_size.width(), self.square_size.height())) # not sure if needed
-
         self.setAcceptDrops(True)
 
         # set minimum width and height, else the layout just collapses
@@ -132,9 +156,7 @@ class Board(Qt.QWidget):
             for piece in board_list:
                 if piece != 13:
                     # calculate row and column
-                    row = int(own_idx / 8)
-                    column = own_idx % 8
-                    print(row, column)
+                    row, column= helpers.int_to_rowcolumn(own_idx)
                     if piece != 0:
                         self.set_piece(row, column, piece)
                     own_idx += 1
@@ -152,15 +174,6 @@ class Board(Qt.QWidget):
 
         else:  # set the piece
             self.grid_layout.addWidget(item_widget, row, column)
-
-    def remove_hints(self, piece_pos):
-        for child in self.hint_grid.children:
-            child.remove()
-
-
-    def update_hints(self, piece_pos):
-        pass
-        # TODO: first remvove all, then create new hints
 
     def set_selected_piece(self, piece_pos=(0, 0), selected=True):
         new_selected_widget: ChessPiece = self.grid_layout.itemAtPosition(piece_pos[1], piece_pos[0]).widget()
@@ -180,7 +193,8 @@ class Board(Qt.QWidget):
             print("deselect", new_selected_widget, self.selected_piece)
 
         # TODO: update move hints
-        # update hints on where to move
+        piece_pos_int = helpers.pos_to_int(piece_pos[0], piece_pos[1], 8, 10)
+        self.hint_grid.set_hints(piece_pos_int)
 
     def invert_piece_selection(self, piece_pos=(0, 0)):
         # check if piece is already selected
@@ -256,6 +270,28 @@ class Board(Qt.QWidget):
 
             # clean up
             child.show()
+
+
+class Hint(QtWidgets.QLabel):
+    def __init__(self, fix_size=QtCore.QSize(50, 50)):
+        super().__init__()
+
+        # set size policy
+        h_policy = QtWidgets.QSizePolicy.Policy.Fixed
+        v_policy = QtWidgets.QSizePolicy.Policy.Fixed
+        policy = QtWidgets.QSizePolicy(h_policy, v_policy)
+
+        self.setSizePolicy(policy)
+
+        self.fix_size = fix_size
+
+        # set up sprite
+        self.sprite =  # TODO!!!
+        self.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+
+    def sizeHint(self) -> QtCore.QSize:
+        return self.fix_size
+
 
 
 class ChessPiece(QtWidgets.QLabel):

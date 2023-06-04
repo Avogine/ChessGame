@@ -30,6 +30,11 @@ def get_piece_sprite_path(idx=0):
     return Path(sprites_path, get_piece_name(idx))
 
 
-def int_to_rowcolumn(int_pos = 0, rowcount = 8, colcount = 8) -> tuple:
-    row = int(int_pos / colcount)
+def int_to_rowcolumn(int_pos=0, rowcount=8, colcount=8) -> tuple:
+    row = int(int_pos / colcount) # rows and columns start at 0
     column = int_pos % rowcount
+
+    return (row, column)
+
+def pos_to_int(x: int, y: int, rowcount=8, colcount=8):
+    return y * colcount + x
