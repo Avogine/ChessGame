@@ -160,7 +160,8 @@ def term_render():  # rendert das aktuelle Chessboard
 def movement(position, move, leg_moves):
     my_figur = my_board.return_figur(move)
     if move in leg_moves:  # move ist legal
-        take = my_board.move(position, move)
+        my_board.move(position, move)
+        take = my_figur
         if take != "":  # keine gegnerische Figur auf move
             take = f"You took a {take}."
         print(f"[T] Good move.{take} Next Player ({my_board.movecount})")
@@ -193,7 +194,7 @@ def movement(position, move, leg_moves):
             r = r + " and " + my_output(p)
         r = r.replace(" and ", " ,", i)
         print(f"[T] {my_output(move)} is not a legal move. Your legal moves are {r}.")
-        move = input(f"[{turn()}] Move: ")
+        move = my_input(input(f"[{turn()}] Move: "))
         movement(position, move, leg_moves)
 
 
@@ -263,6 +264,8 @@ def select(position):
                     else:
                         move = int(my_input(move))
                         movement(position, move, legal_moves)
+        elif position.lower() == "back":
+            my_board.reverse_move()
         else:
             print("[T] That's not a square")
             new_position = input(f"[{turn()}] Select: ")
