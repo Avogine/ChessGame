@@ -36,9 +36,35 @@ def get_marker_sprite_path():
 
 def int_to_rowcolumn(int_pos=0, rowcount=8, colcount=8) -> tuple:
     row = int(int_pos / colcount) # rows and columns start at 0
-    column = int_pos % rowcount
+    column = int_pos % colcount
 
     return (row, column)
 
+
 def pos_to_int(x: int, y: int, rowcount=8, colcount=8):
     return y * colcount + x
+
+
+def engineint_to_rowcolumn(engine_int: int):
+    #rowcount = 8 # also not needed
+    colcount = 10
+
+    row = int(engine_int / colcount)
+    column = engine_int % colcount - 1
+
+    return (row, column)
+
+
+def pos_to_engineint(x: int, y: int):
+    #rowcount = 8 # not needed here
+    colcount = 10
+    return (y * colcount + x + 1)
+
+
+# BROKEN FIXME
+def int_engine2gui(int_pos: int):
+    # convert to uniform x y system
+    y, x = int_to_rowcolumn(int_pos, 8, 10)
+
+    # convert to gui system
+    return pos_to_int(x, y, 8, 8)

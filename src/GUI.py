@@ -52,17 +52,19 @@ class HintGrid(QtWidgets.QWidget):
     def sizeHint(self) -> Qt.QSize:
         return self.square_size
     
-    def set_hints(self, piece_pos: int):
+    def set_hints(self, piece_pos: tuple, selected=True):
         # get all necessary values
         # all even numbers correspond to black moves
         # all uneven numbers are white moves
 
         movecount = self.chess_board.movecount
+        piece_pos_int = helpers.pos_to_engineint(piece_pos[0], piece_pos[1])
         white_moving = bool(movecount % 2)
-        piece_type = self.chess_board.return_figur(piece_pos)
+        piece_type = self.chess_board.return_figur(piece_pos_int)
+        print("Type", piece_type)
 
         if engine.is_white(piece_type) == white_moving:
-            legal_moves = self.chess_board.check_pos_moves(piece_pos)
+            legal_moves = self.chess_board.check_pos_moves(piece_pos_int)
 
             # remove all old hints
             for i in range(63):
@@ -70,11 +72,18 @@ class HintGrid(QtWidgets.QWidget):
                 item = self.grid_layout.itemAtPosition(row, column)
                 if item != None:
                     self.grid_layout.removeItem(item)
-                    del item # not sure if needed but lets hope this works
+                    print("removed", item, row, column)
+                    item.widget().deleteLater() # not sure if needed but lets hope this works
 
-            for move in legal_moves:
-                widget = self.
+            if selected:
+                print("Added")
+                for move in legal_moves:
+                    print(move)
 
+                    widget = Hint()
+                    new_row, new_column = helpers.engineint_to_rowcolumn(move)
+
+                    self.grid_layout.addWidget(widget, new_row, new_column)
 
 
 class Checkerboard(QtWidgets.QWidget):
@@ -193,8 +202,8 @@ class Board(Qt.QWidget):
             print("deselect", new_selected_widget, self.selected_piece)
 
         # TODO: update move hints
-        piece_pos_int = helpers.pos_to_int(piece_pos[0], piece_pos[1], 8, 10)
-        self.hint_grid.set_hints(piece_pos_int)
+        self.hint_grid.set_hints(piece_pos, selected)
+        print("selected", selected)
 
     def invert_piece_selection(self, piece_pos=(0, 0)):
         # check if piece is already selected
@@ -286,7 +295,10 @@ class Hint(QtWidgets.QLabel):
         self.fix_size = fix_size
 
         # set up sprite
-        self.sprite =  # TODO!!!
+        path = helpers.get_marker_sprite_path()
+        self.sprite = Qt.QPixmap(str(path))
+        self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                                                  QtCore.Qt.TransformationMode.SmoothTransformation))
         self.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
     def sizeHint(self) -> QtCore.QSize:
