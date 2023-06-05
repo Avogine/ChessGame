@@ -63,17 +63,17 @@ class HintGrid(QtWidgets.QWidget):
         piece_type = self.chess_board.return_figur(piece_pos_int)
         print("Type", piece_type)
 
+        # remove all old hints
+        for i in range(63):
+            row, column = helpers.int_to_rowcolumn(i)
+            item = self.grid_layout.itemAtPosition(row, column)
+            if item != None:
+                self.grid_layout.removeItem(item)
+                print("removed", item, row, column)
+                item.widget().deleteLater() # not sure if needed but lets hope this works
+
         if engine.is_white(piece_type) == white_moving:
             legal_moves = self.chess_board.check_pos_moves(piece_pos_int)
-
-            # remove all old hints
-            for i in range(63):
-                row, column = helpers.int_to_rowcolumn(i)
-                item = self.grid_layout.itemAtPosition(row, column)
-                if item != None:
-                    self.grid_layout.removeItem(item)
-                    print("removed", item, row, column)
-                    item.widget().deleteLater() # not sure if needed but lets hope this works
 
             if selected:
                 print("Added")
@@ -85,9 +85,11 @@ class HintGrid(QtWidgets.QWidget):
 
                     self.grid_layout.addWidget(widget, new_row, new_column)
 
+            
+
 
 class Checkerboard(QtWidgets.QWidget):
-    def __init__(self, parent=None, color_bright=QtGui.QColor("#ffffff"), color_dark=QtGui.QColor("#5f8231"),
+    def __init__(self, parent=None, color_bright=QtGui.QColor("#ffffff"), color_dark=QtGui.QColor("#000000"),
                  square_size=50):
         super().__init__(parent=parent)
 
@@ -172,6 +174,25 @@ class Board(Qt.QWidget):
 
                 engine_idx += 1
 
+    # this does not check whether the move is allowed or not
+    def move_piece(self, origin: tuple, dest: tuple):
+        # unpack variables
+        old_column, old_row = origin
+        new_column, new_row = dest
+
+        old_piece = self.grid_layout.itemAtPosition(old_row, old_column)
+        old_piece_widget = old_piece.widget()
+
+        # move item from old to new position
+        self.grid_layout.removeItem(old_piece)
+        self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
+
+        # tell engine to move piece
+        old_pos = helpers.pos_to_engineint(old_column, old_row)
+        new_pos = helpers.pos_to_engineint(new_column, new_row)
+
+        self.chess_board.move(old_pos, new_pos)
+
     def set_piece(self, row=0, column=0, piece_id=0):
         # remove piece
         item = self.grid_layout.itemAtPosition(row, column)
@@ -201,7 +222,7 @@ class Board(Qt.QWidget):
             new_selected_widget.set_select(False)
             print("deselect", new_selected_widget, self.selected_piece)
 
-        # TODO: update move hints
+        # update move hints
         self.hint_grid.set_hints(piece_pos, selected)
         print("selected", selected)
 
@@ -211,9 +232,6 @@ class Board(Qt.QWidget):
             self.set_selected_piece(piece_pos, False)
         else:
             self.set_selected_piece(piece_pos, True)
-
-    def minimumSizeHint(self):
-        return self.checkerboard.minimumSizeHint()
 
     def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
         # action needs to be accepted for dropEvent to be called
@@ -240,15 +258,18 @@ class Board(Qt.QWidget):
             # check if old position equals new position
             if old_column == new_column and old_row == new_row:  # piece was not moved, but selected
                 self.invert_piece_selection((new_column, new_row))
-            else:  # other piece was moved, deselect
+            else:  # piece should be moved, deselect
                 self.set_selected_piece((0, 0), False)
 
-                old_piece = self.grid_layout.itemAtPosition(old_row, old_column)
-                old_piece_widget = old_piece.widget()
+                # check if move is legal
+                old_engineint = helpers.pos_to_engineint(old_column, old_row)
+                new_engineint = helpers.pos_to_engineint(new_column, new_row)
+                legal_moves = self.chess_board.check_pos_moves(old_engineint)
 
-                # move item from old to new position
-                self.grid_layout.removeItem(old_piece)
-                self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
+                print(legal_moves, old_row, old_column, old_engineint)
+                
+                if new_engineint in legal_moves:
+                    self.move_piece((old_column, old_row), (new_column, new_row))
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         # get child from position
@@ -279,6 +300,11 @@ class Board(Qt.QWidget):
 
             # clean up
             child.show()
+        
+
+
+    def minimumSizeHint(self):
+        return self.checkerboard.minimumSizeHint()
 
 
 class Hint(QtWidgets.QLabel):
