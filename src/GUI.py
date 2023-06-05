@@ -192,6 +192,12 @@ class Board(Qt.QWidget):
         old_piece = self.grid_layout.itemAtPosition(old_row, old_column)
         old_piece_widget = old_piece.widget()
 
+		# remove piece at new position, if there is any
+        captured_piece = self.grid_layout.itemAtPosition(new_row, new_column)
+        if captured_piece != None:
+            self.grid_layout.removeItem(captured_piece)
+            captured_piece.widget().deleteLater()
+
         # move item from old to new position
         self.grid_layout.removeItem(old_piece)
         self.grid_layout.addWidget(old_piece_widget, new_row, new_column)
@@ -203,7 +209,7 @@ class Board(Qt.QWidget):
         self.chess_board.move(old_pos, new_pos)
 
         # TODO: to account for changes rebuild whole board
-        self.update_from_list(self.chess_board.board)
+        #self.update_from_list(self.chess_board.board)
 
     def set_piece(self, row=0, column=0, piece_id=0):
         # remove piece
@@ -320,6 +326,8 @@ class Board(Qt.QWidget):
 
             # clean up
             child.show()
+        else: # normal press action
+			pass # TODO: implement press movement
         
 
 
@@ -349,7 +357,6 @@ class Hint(QtWidgets.QLabel):
 
     def sizeHint(self) -> QtCore.QSize:
         return self.fix_size
-
 
 
 class ChessPiece(QtWidgets.QLabel):
