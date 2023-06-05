@@ -161,6 +161,15 @@ class Board(Qt.QWidget):
         self.selected_piece = (-1, -1)
 
     def update_from_list(self, board_list=None):
+        # remove old pieces
+        for i in range(63):
+            row, column = helpers.int_to_rowcolumn(i)
+            item = self.grid_layout.itemAtPosition(row, column)
+            if item != None:
+                self.grid_layout.removeItem(item)
+                print("removed", item, row, column)
+                item.widget().deleteLater() # not sure if needed but lets hope this works
+
         own_idx = 0
         engine_idx = 0
         if board_list is not None:
@@ -192,6 +201,9 @@ class Board(Qt.QWidget):
         new_pos = helpers.pos_to_engineint(new_column, new_row)
 
         self.chess_board.move(old_pos, new_pos)
+
+        # TODO: to account for changes rebuild whole board
+        self.update_from_list(self.chess_board.board)
 
     def set_piece(self, row=0, column=0, piece_id=0):
         # remove piece
@@ -261,14 +273,22 @@ class Board(Qt.QWidget):
             else:  # piece should be moved, deselect
                 self.set_selected_piece((0, 0), False)
 
+                # check if move is made from right color
+                movecount = self.chess_board.movecount
+                piece_pos_int = helpers.pos_to_engineint(old_column, old_row)
+                white_moving = bool(movecount % 2)
+                piece_type = self.chess_board.return_figur(piece_pos_int)
+                right_color = white_moving == engine.is_white(piece_type)
+
                 # check if move is legal
                 old_engineint = helpers.pos_to_engineint(old_column, old_row)
                 new_engineint = helpers.pos_to_engineint(new_column, new_row)
                 legal_moves = self.chess_board.check_pos_moves(old_engineint)
+                legal = new_engineint in legal_moves
 
                 print(legal_moves, old_row, old_column, old_engineint)
-                
-                if new_engineint in legal_moves:
+
+                if right_color and legal:
                     self.move_piece((old_column, old_row), (new_column, new_row))
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
