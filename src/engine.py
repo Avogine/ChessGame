@@ -174,17 +174,16 @@ class Chessboard:
         self.rocharden_check(pos)  # sollte ein Rook oder ein King bewegt worden sein wird es gespeichert
 
         if pos == self.white_king_pos:
-            self.white_king_pos = new_pos  # um leichter nach checks zu suchen wird die pos des Kings gespeichert
-        if self.check_search(self.black_king_pos, False):
-            self.stat_check = 1   # Black in check
-        else:
-            self.stat_check = 0
-
+            self.white_king_pos = new_pos   # um leichter nach checks zu suchen wird die pos des Kings gespeichert
         if pos == self.black_king_pos:
             self.black_king_pos = new_pos
-        if self.check_search(self.white_king_pos, True):
-            self.stat_check = 2    # White in check
 
+        if self.check_search(self.black_king_pos, False):
+            self.stat_check = 1   # Black in check
+        elif self.check_search(self.white_king_pos, True):
+            self.stat_check = 2    # White in check
+        else:
+            self.stat_check = 0
 
         if taken != 0:
             if taken == 1:
@@ -251,7 +250,6 @@ class Chessboard:
             old_pos, now_pos, taken = datei
         else:
             old_pos, now_pos, taken, w_cas, b_cas = datei
-        print(old_pos, now_pos, taken, w_cas, b_cas)
         self.movecount -= 1  # movecount verringert
 
         if w_cas:
@@ -317,17 +315,16 @@ class Chessboard:
 
         if now_pos == self.white_king_pos:
             self.white_king_pos = old_pos  # um leichter nach checks zu suchen wird die pos des Kings gespeichert
-        if self.check_search(self.black_king_pos, False):
-            self.stat_check = 1
-        else:
-            self.stat_check = 0
-
         if now_pos == self.black_king_pos:
             self.black_king_pos = old_pos
-        if self.check_search(self.white_king_pos, True):
+
+        if self.check_search(self.black_king_pos, False):
+            self.stat_check = 1
+        elif self.check_search(self.white_king_pos, True):
             self.stat_check = 2
-            # hab das zweite stat_check = 0 weg gelassen, weil sonst die 1 überschrieben werden könnten.
-            # diese Lösung könnte allerdings in Zukunft zu Fehlern führen
+        else:
+            self.stat_check = 0
+            # mögliche Problemstelle
 
     def check_pos_moves(self, pos):
         piece_num = self.return_figur(pos)
@@ -436,20 +433,30 @@ class Chessboard:
             new_ret = []
             for i in ret:
                 self.move(pos, i)
-                print(i)
-                if self.stat_check != 2:
+                if self.stat_check != 1:
                     new_ret.append(i)
-                    print(self.stat_check)
                 self.reverse_move()
-            print(new_ret)
             ret = new_ret
 
         else:
             new_ret = []
             for i in ret:
                 self.move(pos, i)
-                if self.stat_check != 1:
+                if self.stat_check != 2:
                     new_ret.append(i)
                 self.reverse_move()
             ret = new_ret
         return ret
+
+    def all_moves(self):
+        ret = []
+        for i in range(80):
+            if 0 < self.return_figur(i) < 13:
+                if self.return_figur(i) % 2 == self.movecount % 2:
+                    d = self.check_pos_moves(i)
+                    if d:
+                        for m in d:
+                            ret.append(m)
+            else:
+                pass
+        return(ret)

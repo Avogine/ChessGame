@@ -1,6 +1,15 @@
 import engine
 
-my_board = engine.Chessboard()
+my_board = engine.Chessboard((
+    13, 8, 0, 6, 10, 12, 6, 4, 8, 13,
+    13, 2, 2, 2, 0, 0, 2, 2, 2, 13,
+    13, 0, 0, 4, 2, 0, 0, 0, 0, 13,
+    13, 0, 0, 0, 0, 2, 0, 0, 0, 13,
+    13, 0, 0, 5, 0, 1, 0, 0, 0, 13,
+    13, 0, 0, 0, 0, 0, 9, 0, 0, 13,
+    13, 1, 1, 1, 1, 0, 1, 1, 1, 13,
+    13, 7, 3, 5, 0, 11, 0, 3, 7, 13,
+))
 
 
 def turn():
@@ -278,5 +287,14 @@ def start_normal_game():
     ''')
     while True:  # start
         term_render()
+        x = my_board.all_moves()
+        if not x:
+            print("[T] Checkmate Motherfucker")
+            if my_board.movecount % 2 == 0:
+                print("[T] White won")
+            else:
+                print("[T] Black won")
+            break
+
         pos = input(f"[{turn()}] Select: ")
         select(pos)
