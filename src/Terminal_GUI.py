@@ -1,16 +1,7 @@
 import engine
 
-my_board = engine.Chessboard((
-    13, 8, 0, 6, 10, 12, 6, 4, 8, 13,
-    13, 2, 2, 2, 0, 0, 2, 2, 2, 13,
-    13, 0, 0, 4, 2, 0, 0, 0, 0, 13,
-    13, 0, 0, 0, 0, 2, 0, 0, 0, 13,
-    13, 0, 0, 5, 0, 1, 0, 0, 0, 13,
-    13, 0, 0, 0, 0, 0, 9, 0, 0, 13,
-    13, 1, 1, 1, 1, 0, 1, 1, 1, 13,
-    13, 7, 3, 5, 0, 11, 0, 3, 7, 13,
-))
 
+my_board = engine.Chessboard("3b4/2p4q/1r2bprp/bnkP1p1P/P4P2/2P1PP2/q1NBK1PQ/2R2R2 w FC - 0 29")
 
 def turn():
     if my_board.movecount % 2 == 0:
@@ -164,6 +155,8 @@ def term_render():  # rendert das aktuelle Chessboard
         print(
             f"""        {ren(i + 1)}{ren(i + 2)}{ren(i + 3)}{ren(i + 4)}{ren(i + 5)}{ren(i + 6)}{ren(i + 7)}{ren(i + 8)}{zahl(i)}""")
     print("\n")
+    print(f"| {my_board.conv_to_FEN()} |")
+    print("\n")
 
 
 def movement(position, move, leg_moves):
@@ -285,6 +278,8 @@ def start_normal_game():
     print('''A Chess Game by David Walk and Jan Grüninger
     Have Fun!!!
     ''')
+
+
     while True:  # start
         term_render()
         x = my_board.all_moves()
@@ -294,7 +289,10 @@ def start_normal_game():
                 print("[T] White won")
             else:
                 print("[T] Black won")
-            break
+
 
         pos = input(f"[{turn()}] Select: ")
         select(pos)
+
+
+start_normal_game()
