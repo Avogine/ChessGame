@@ -3,18 +3,18 @@ from colorama import *
 
 piece_sprite_path = [
     None,
-    "white_pawn.png",
-    "black_pawn.png",
-    "white_knight.png",
-    "black_knight.png",
-    "white_bishop.png",
-    "black_bishop.png",
-    "white_rook.png",
-    "black_rook.png",
-    "white_queen.png",
-    "black_queen.png",
-    "white_king.png",
-    "black_king.png"
+    "wp.svg",
+    "bp.svg",
+    "wn.svg",
+    "bn.svg",
+    "wb.svg",
+    "bb.svg",
+    "wr.svg",
+    "br.svg",
+    "wq.svg",
+    "bq.svg",
+    "wk.svg",
+    "bk.svg"
 ]
 
 sprites_path = Path(r'../src/sprites')

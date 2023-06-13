@@ -151,7 +151,7 @@ standartborad = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
 # black:       2    4      6      8    10    12
 # 13: invalid/ wall
 
-# TODO: enpassent, remis,
+# TODO: enpassent, remis, promotion
 class Chessboard:
 
     def __init__(self, my_board=standartborad):
@@ -683,7 +683,7 @@ class Chessboard:
         elif piece == 11:  # moves for the white king
             for i in [1, 9, 10, 11, -11, -10, -9, -1]:
                 new_pos = pos + i
-                if self.return_figur(new_pos) == 0 or is_white(self.return_figur(new_pos)):
+                if self.return_figur(new_pos) == 0 or is_black(self.return_figur(new_pos)):
                     ret.append(new_pos)
 
             if self.stat_check != 2:  # castlen

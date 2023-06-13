@@ -1,7 +1,7 @@
 import engine
 
 
-my_board = engine.Chessboard("3b4/2p4q/1r2bprp/bnkP1p1P/P4P2/2P1PP2/q1NBK1PQ/2R2R2 w FC - 0 29")
+my_board = engine.Chessboard()
 
 def turn():
     if my_board.movecount % 2 == 0:

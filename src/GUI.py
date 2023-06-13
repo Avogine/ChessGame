@@ -89,7 +89,7 @@ class HintGrid(QtWidgets.QWidget):
 
 
 class Checkerboard(QtWidgets.QWidget):
-    def __init__(self, parent=None, color_bright=QtGui.QColor("#ffffff"), color_dark=QtGui.QColor("#000000"),
+    def __init__(self, parent=None, color_bright=QtGui.QColor("#ffffff"), color_dark=QtGui.QColor("#222222"),
                  square_size=50):
         super().__init__(parent=parent)
 
@@ -327,7 +327,7 @@ class Board(Qt.QWidget):
             # clean up
             child.show()
         else: # normal press action
-			pass # TODO: implement press movement
+            pass # TODO: implement press movement
         
 
 
@@ -401,7 +401,7 @@ class ChessPiece(QtWidgets.QLabel):
             self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
         elif not self.selected and selected:
             # scale pixmap to indicate selection
-            self.setPixmap(self.sprite.scaled(self.fix_size * 0.5, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+            self.setPixmap(self.sprite.scaled(self.fix_size * 0.75, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
 
         self.selected = selected
 
@@ -416,7 +416,7 @@ class ChessPiece(QtWidgets.QLabel):
             # TODO: maybe remove unnecessary double code (see above, used there too)
             if self.selected:
                 # scale pixmap to indicate selection
-                self.setPixmap(self.sprite.scaled(self.fix_size * 0.5, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                self.setPixmap(self.sprite.scaled(self.fix_size * 0.75, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
                                                   QtCore.Qt.TransformationMode.SmoothTransformation))
             else:
                 # scale pixmap to original size
