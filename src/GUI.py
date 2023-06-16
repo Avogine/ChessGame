@@ -139,9 +139,6 @@ class Board(Qt.QWidget):
         self.checkerboard = Checkerboard(parent=self, square_size=self.square_size)
         self.checkerboard.show()
 
-        # add grid layout behind true pieces for hints
-        self.hint_grid = HintGrid(self, self.chess_board, square_size)
-
         # add grid layout
         self.grid_layout = QtWidgets.QGridLayout(self)
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
@@ -151,6 +148,10 @@ class Board(Qt.QWidget):
 
         #self.grid_layout.setGeometry(QtCore.QRect(0, 0, self.square_size.width(), self.square_size.height())) # not sure if needed
         self.setAcceptDrops(True)
+
+        # add grid layout in front of true pieces for hints
+        self.hint_grid = HintGrid(self, self.chess_board, square_size)
+        self.hint_grid.raise_()
 
         # set minimum width and height, else the layout just collapses
         for i in range(8):
@@ -162,7 +163,7 @@ class Board(Qt.QWidget):
 
     def update_from_list(self, board_list=None):
         # remove old pieces
-        for i in range(63):
+        for i in range(64): # range 64 means including only 63
             row, column = helpers.int_to_rowcolumn(i)
             item = self.grid_layout.itemAtPosition(row, column)
             if item != None:
