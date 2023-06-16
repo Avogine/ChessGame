@@ -1,9 +1,9 @@
 import GUI
 import engine
 import random
-import Terminal_GUI
+#import Terminal_GUI
 
-#gui = GUI.GUI()
+gui = GUI.GUI()
 
 
 """def ready():
@@ -14,4 +14,4 @@ import Terminal_GUI
 if __name__ == "__main__":
     ready()"""
 
-Terminal_GUI.start_normal_game()
+#Terminal_GUI.start_normal_game()

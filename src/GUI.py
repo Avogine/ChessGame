@@ -6,7 +6,11 @@ import helpers
 class GUI(QtWidgets.QApplication):
     def __init__(self):
         super().__init__([])
-        self.window = QtWidgets.QWidget()
+        # add start window
+        self.menu_window = StartMenu()
+
+        # add main window
+        self.main_window = Qt.QWidget()
         self.vboxlayout = QtWidgets.QVBoxLayout()  # storing the top part (board and controls) and bottom (statistics)
         self.hboxlayout = QtWidgets.QHBoxLayout()  # this second layout stores the board and controls
         self.vboxlayout.addLayout(self.hboxlayout)
@@ -18,15 +22,28 @@ class GUI(QtWidgets.QApplication):
         self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100))
         self.hboxlayout.addWidget(self.board)
 
-        self.window.setLayout(self.vboxlayout)
-        self.window.show()
-        self.window.setWindowTitle('ChessGame')
+        # TODO
+        '''
+        self.main_window.setLayout(self.vboxlayout)
+        self.main_window.showFullScreen()
+        self.main_window.setWindowTitle('ChessGame')
+        '''
 
         # fill board
         self.board.update_from_list(self.chess_board.board)
         
         # run
         self.exec()
+
+
+class StartMenu(Qt.QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        self.show()
+
 
 
 class HintGrid(QtWidgets.QWidget):
