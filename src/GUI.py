@@ -15,7 +15,7 @@ class GUI(QtWidgets.QApplication):
         self.chess_board = engine.Chessboard()
 
         # add board to second layout
-        self.board = Board(self.chess_board)
+        self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100))
         self.hboxlayout.addWidget(self.board)
 
         self.window.setLayout(self.vboxlayout)
@@ -80,7 +80,7 @@ class HintGrid(QtWidgets.QWidget):
                 for move in legal_moves:
                     print(move)
 
-                    widget = Hint()
+                    widget = Hint(fix_size=self.square_size)
                     new_row, new_column = helpers.engineint_to_rowcolumn(move)
 
                     self.grid_layout.addWidget(widget, new_row, new_column)
@@ -90,7 +90,7 @@ class HintGrid(QtWidgets.QWidget):
 
 class Checkerboard(QtWidgets.QWidget):
     def __init__(self, parent=None, color_bright=QtGui.QColor("#ffffff"), color_dark=QtGui.QColor("#222222"),
-                 square_size=50):
+                 square_size=QtCore.QSize(50, 50)):
         super().__init__(parent=parent)
 
         self.color_bright = color_bright
@@ -112,19 +112,19 @@ class Checkerboard(QtWidgets.QWidget):
                 else:
                     color = self.color_dark
 
-                x = column * self.square_size
-                y = row * self.square_size
-                w = 100
-                h = 100
+                x = column * self.square_size.width()
+                y = row * self.square_size.height()
+                w = self.square_size.width()
+                h = self.square_size.height()
 
                 painter.setBrush(Qt.QBrush(color))
                 painter.drawRect(x, y, w, h)
 
     def minimumSizeHint(self):
-        return Qt.QSize(self.square_size * 8, self.square_size * 8)
+        return Qt.QSize(self.square_size.width() * 8, self.square_size.height() * 8)
 
     def sizeHint(self):
-        return Qt.QSize(self.square_size * 8, self.square_size * 8)
+        return Qt.QSize(self.square_size.width() * 8, self.square_size.height() * 8)
 
 
 class Board(Qt.QWidget):
@@ -136,7 +136,7 @@ class Board(Qt.QWidget):
         self.chess_board = chess_board
 
         # add background
-        self.checkerboard = Checkerboard(parent=self)
+        self.checkerboard = Checkerboard(parent=self, square_size=self.square_size)
         self.checkerboard.show()
 
         # add grid layout behind true pieces for hints
@@ -214,7 +214,7 @@ class Board(Qt.QWidget):
     def set_piece(self, row=0, column=0, piece_id=0):
         # remove piece
         item = self.grid_layout.itemAtPosition(row, column)
-        item_widget = ChessPiece(piece_type=piece_id)
+        item_widget = ChessPiece(piece_type=piece_id, fix_size=self.square_size)
 
         if item:  # check to avoid None, then remove
             item_widget = item.widget()
