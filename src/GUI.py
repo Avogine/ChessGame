@@ -1,39 +1,41 @@
+import random
+
 from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 import engine
 import helpers
+from random import randrange
 
 
 class GUI(QtWidgets.QApplication):
     def __init__(self):
         super().__init__([])
+        # register fonts
+        Qt.QFontDatabase.addApplicationFont('../src/fonts/highway_gothic.ttf')
+        # set default font
+        self.setFont(Qt.QFont('Highway Gothic', 30))
+
         # add start window
         self.menu_window = StartMenu()
+        self.menu_window.start_button.clicked.connect(self.start_game)
 
-        # add main window
-        self.main_window = Qt.QWidget()
-        self.vboxlayout = QtWidgets.QVBoxLayout()  # storing the top part (board and controls) and bottom (statistics)
-        self.hboxlayout = QtWidgets.QHBoxLayout()  # this second layout stores the board and controls
-        self.vboxlayout.addLayout(self.hboxlayout)
-
-        # make playboard_engine instance
-        self.chess_board = engine.Chessboard()
-
-        # add board to second layout
-        self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100))
-        self.hboxlayout.addWidget(self.board)
-
-        # TODO
-        '''
-        self.main_window.setLayout(self.vboxlayout)
-        self.main_window.showFullScreen()
-        self.main_window.setWindowTitle('ChessGame')
-        '''
-
-        # fill board
-        self.board.update_from_list(self.chess_board.board)
-        
         # run
         self.exec()
+
+    def start_game(self):
+        # hide start menu
+        self.menu_window.hide()
+
+        # add main window
+        self.game_window = GameWindow()
+        self.game_window.stop_button.clicked.connect(self.stop_game)
+
+
+    def stop_game(self):
+        # remove old window instance
+        del self.game_window
+
+        # show menu window
+        self.menu_window.show()
 
 
 class StartMenu(Qt.QWidget):
@@ -41,9 +43,65 @@ class StartMenu(Qt.QWidget):
         super().__init__()
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.setContentsMargins(100, 100, 100, 100)
+        self.main_layout.setSpacing(50)
+        self.setWindowTitle('ChessGame - Start Menu')
+
+        # add buttons and labels
+        self.icon = RandomPiece(size=QtCore.QSize(100, 100))
+        self.main_layout.addWidget(self.icon, 100)
+        self.main_layout.setAlignment(self.icon, QtCore.Qt.AlignmentFlag.AlignCenter)
+
+        self.main_label = QtWidgets.QLabel('ChessGame\n-\nChess in Python by David Walk and Jan Grüninger.')
+        self.main_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
+        self.main_layout.addWidget(self.main_label)
+
+        self.start_button = QtWidgets.QPushButton("Start local game.")
+        self.start_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Minimum)
+        self.start_button.setMinimumSize(400, 100)
+        self.main_layout.addWidget(self.start_button)
+        self.main_layout.setAlignment(self.start_button, QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         self.show()
 
+
+class GameWindow(Qt.QWidget):
+    def __init__(self):
+        super().__init__()
+
+        # make playboard_engine instance
+        self.chess_board = engine.Chessboard()
+
+        self.vboxlayout = QtWidgets.QVBoxLayout()  # storing the top part (board and controls) and bottom (statistics)
+        self.hboxlayout = QtWidgets.QHBoxLayout()  # this second layout stores the board and controls
+        self.vboxlayout.addLayout(self.hboxlayout)
+
+        self.controllayout = QtWidgets.QVBoxLayout()  # stores controls on left side of screen
+        self.hboxlayout.addLayout(self.controllayout)
+
+        # add board to second layout
+        self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100))
+        self.hboxlayout.addWidget(self.board)
+
+        # add stop button
+        self.stop_button = Qt.QPushButton('Stop')
+        self.stop_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
+        self.stop_button.setMinimumSize(100, 100)
+        self.controllayout.addWidget(self.stop_button)
+
+        # add revert button
+        self.revert_button = Qt.QPushButton('<-')
+        self.revert_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
+        self.revert_button.setMinimumSize(100, 100)
+        self.controllayout.addWidget(self.revert_button)
+        self.revert_button.clicked.connect(self.board.reverse_move)
+
+        self.setLayout(self.vboxlayout)
+        self.showFullScreen()
+        self.setWindowTitle('ChessGame - Game')
+
+        # fill board
+        self.board.update_from_list(self.chess_board.board)
 
 
 class HintGrid(QtWidgets.QWidget):
@@ -102,7 +160,6 @@ class HintGrid(QtWidgets.QWidget):
 
                     self.grid_layout.addWidget(widget, new_row, new_column)
 
-            
 
 
 class Checkerboard(QtWidgets.QWidget):
@@ -163,20 +220,54 @@ class Board(Qt.QWidget):
         self.grid_layout.setVerticalSpacing(0)
         self.grid_layout.setHorizontalSpacing(0)
 
-        #self.grid_layout.setGeometry(QtCore.QRect(0, 0, self.square_size.width(), self.square_size.height())) # not sure if needed
         self.setAcceptDrops(True)
 
         # add grid layout in front of true pieces for hints
         self.hint_grid = HintGrid(self, self.chess_board, square_size)
         self.hint_grid.raise_()
+        self.hint_grid.raise_()
+        self.hint_grid.raise_()
+
 
         # set minimum width and height, else the layout just collapses
         for i in range(8):
-            self.grid_layout.setColumnMinimumWidth(i, self.square_size.width()) # TODO: use variables for minimum size
+            self.grid_layout.setColumnMinimumWidth(i, self.square_size.width())
             self.grid_layout.setRowMinimumHeight(i, self.square_size.height())
 
         # variables
         self.selected_piece = (-1, -1)
+
+    def compare_board(self, engine_board):
+        equal = True
+        own_idx = 0
+        for engine_piece in engine_board:
+            if engine_piece != 13:
+                row, column = helpers.int_to_rowcolumn(own_idx)
+                own_piece = self.grid_layout.itemAtPosition(row, column)
+
+                # check if there is no piece
+                if engine_piece == 0:
+                    if own_piece is not None:
+                        if own_piece.widget().piece_type != engine_piece:
+                            equal = False
+                else:  # if there should be a piece
+                    if own_piece is None:
+                        equal = False
+                    elif own_piece.widget().piece_type != engine_piece:
+                        equal = False
+
+                own_idx += 1
+
+        return equal
+
+    def reverse_move(self):
+        self.chess_board.reverse_move()
+
+        print(self.compare_board(self.chess_board.board))
+
+        self.update_from_list(self.chess_board.board)
+
+        print(self.compare_board(self.chess_board.board))
 
     def update_from_list(self, board_list=None):
         # remove old pieces
@@ -210,7 +301,7 @@ class Board(Qt.QWidget):
         old_piece = self.grid_layout.itemAtPosition(old_row, old_column)
         old_piece_widget = old_piece.widget()
 
-		# remove piece at new position, if there is any
+        # remove piece at new position, if there is any
         captured_piece = self.grid_layout.itemAtPosition(new_row, new_column)
         if captured_piece != None:
             self.grid_layout.removeItem(captured_piece)
@@ -227,7 +318,8 @@ class Board(Qt.QWidget):
         self.chess_board.move(old_pos, new_pos)
 
         # TODO: to account for changes rebuild whole board
-        #self.update_from_list(self.chess_board.board)
+        if not self.compare_board(self.chess_board.board):
+            self.update_from_list(self.chess_board.board)
 
     def set_piece(self, row=0, column=0, piece_id=0):
         # remove piece
@@ -440,3 +532,13 @@ class ChessPiece(QtWidgets.QLabel):
                 # scale pixmap to original size
                 self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
                                                   QtCore.Qt.TransformationMode.SmoothTransformation))
+
+class RandomPiece(ChessPiece):
+    def __init__(self, size=Qt.QSize(50, 50)):
+        # generate random piece type
+        rand = random.randrange(1, 13)
+
+        super().__init__(piece_type=rand, fix_size=size)
+
+        # needs to be unset because of ChessPiece behaviour
+        self.setAcceptDrops(False)
