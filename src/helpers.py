@@ -1,6 +1,8 @@
 from pathlib import Path
 from colorama import *
 
+use_linux_paths = False  # TODO: use a better way to handle this
+
 piece_sprite_path = [
     None,
     "wp.svg",
@@ -17,7 +19,11 @@ piece_sprite_path = [
     "bk.svg"
 ]
 
-sprites_path = Path(r'../src/sprites')
+sprites_path_win = Path(r'~\..\src\sprites')  # windows version
+sprites_path_linux = Path(r'../src/sprites')  # linux version
+
+font_path_win = Path(r'~\..\src\fonts\highway_gothic.ttf')  # windows version
+font_path_linux = Path(r'/../src/sprites/highway_gothic.ttf')  # linux version
 
 
 """♙♟♘♞♗♝♖♜♕♛♔♚"""
@@ -26,12 +32,25 @@ def get_piece_name(idx=0):
     return piece_sprite_path[idx]
 
 
+def get_font_path():
+    if use_linux_paths:
+        return font_path_linux
+    else:
+        return font_path_win
+
+
 def get_piece_sprite_path(idx=0):
-    return Path(sprites_path, get_piece_name(idx))
+    if use_linux_paths:
+        return Path(sprites_path_linux, get_piece_name(idx))
+    else:
+        return Path(sprites_path_win, get_piece_name(idx))
 
 
 def get_marker_sprite_path():
-    return Path(sprites_path, "marker.png")
+    if use_linux_paths:
+        return Path(sprites_path_linux, "marker.png")
+    else:
+        return Path(sprites_path_win, "marker.png")
 
 
 def int_to_rowcolumn(int_pos=0, rowcount=8, colcount=8) -> tuple:

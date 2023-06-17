@@ -10,7 +10,8 @@ class GUI(QtWidgets.QApplication):
     def __init__(self):
         super().__init__([])
         # register fonts
-        Qt.QFontDatabase.addApplicationFont('../src/fonts/highway_gothic.ttf')
+        Qt.QFontDatabase.addApplicationFont(str(helpers.get_font_path()))
+
         # set default font
         self.setFont(Qt.QFont('Highway Gothic', 30))
 
