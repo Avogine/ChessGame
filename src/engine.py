@@ -335,7 +335,7 @@ class Chessboard:
             cas += "-"
         output += cas
 
-        if self.enpassant:  # mögliche enpassents
+        if self.enpassant: # mögliche enpassents
             output += f" {my_output(self.enpassant)} "
         else:
             output += " - "
@@ -394,82 +394,73 @@ class Chessboard:
     # TODO: Checkmat erkennen
 
     def move(self, pos, new_pos):
+        kind = 0
+        senp = 0
+        # first status change
+        save_enpassant = self.enpassant
         self.enpassant = 0
-        taken = self.return_figur(new_pos)  # figur auf dem Feld das betreten wurde
-
-        con_board = self.conv_to_FEN()
-        self.board_speicher.append(con_board)
-        # FIXME: der letzte Teil der FEN muss abgeschitten werden da der movcount und die fifty move. immer geändert werden
-
         self.fifty_move_rule += 1
-        self.movecount += 1  # move-count erhöhen
 
-        if self.return_figur(pos) == 1 or self.return_figur(pos) == 2:  # wenn die bewegte Figur ein Bauer ist
-            self.fifty_move_rule = 0  # die Variable für die Fifty Move Rule wird zurückgesetzt
-            self.board_speicher.clear()
-            if (10 < pos < 19 and 30 < new_pos < 39) or (60 < pos < 69 and 40 < new_pos < 49):
-                self.enpassant = new_pos  # mögliche enpassents
-        elif self.return_figur(pos) == 11:  # wenn die bewegte Figur der weiße König ist
-            self.white_king_pos = new_pos  # die Position des Königs wird gespeichert
-        elif self.return_figur(pos) == 12:  # wenn die bewegte Figur der schwarze König ist
-            self.black_king_pos = new_pos
-
-        self.board[new_pos] = self.board[pos]  # neue Feld ist gleich der Figur
-        self.board[pos] = 0  # Feld der Figur ist jetzt frei(=0)
-
-        if self.check_search(self.black_king_pos, False):
-            self.stat_check = 1  # Black in check
-
-        elif self.check_search(self.white_king_pos, True):
-            self.stat_check = 2  # White in check
-
-        else:
-            self.stat_check = 0
-
-
-        if pos == 75 and (new_pos == 77):
-            self.board[76] = 7  # neue Feld ist gleich der Figur
-            self.board[78] = 0
-        elif pos == 75 and (new_pos == 73):
-            self.board[74] = 7
-            self.board[71] = 0
-        elif pos == 5 and (new_pos == 7):
-            self.board[6] = 8  # neue Feld ist gleich der Figur
-            self.board[8] = 0
-        elif pos == 5 and (new_pos == 3):
-            self.board[4] = 8
-            self.board[1] = 0
-
-        if taken != 0:
+        # kind of move
+        if self.return_figur(pos) == 1 or self.return_figur(pos) == 2:  # Pawn
             self.fifty_move_rule = 0
             self.board_speicher.clear()
-            if taken == 1:
-                self.material -= 1
-            elif taken == 2:
-                self.material += 1
-            elif taken == 3:
-                self.material -= 3
-            elif taken == 4:
-                self.material += 3
-            elif taken == 5:
-                self.material -= 3
-            elif taken == 6:
-                self.material += 3
-            elif taken == 7:
-                self.material -= 5
-            elif taken == 8:
-                self.material += 5
-            elif taken == 9:
-                self.material -= 9
-            elif taken == 10:
-                self.material += 9
 
-            # datei = pos, new_pos, taken, castlen_white, castlen_black
-            # rocharde:
-            #    0 = niemand
-            #    1 = nur rechts
-            #    2 = nur links
-            #    3 = alle
+            if int(new_pos/10) == 0 or int(new_pos/10) == 7:   # promotion
+                kind = 1
+            elif new_pos == save_enpassant:   # enpassant
+                kind = 2
+                if pos > new_pos:   # white
+                    self.board[new_pos + 10] = 0
+                else:   # black
+                    self.board[new_pos - 10] = 0
+            elif (int(new_pos/10) == 3 and int(pos/10) == 1) or (int(new_pos/10) == 4 and int(pos/10) == 6):
+                self.enpassant = int((new_pos + pos)/2)
+
+
+        elif self.return_figur(pos) == 11:  # white king
+            self.white_king_pos = new_pos  # save king position
+
+            if pos == 75 and (new_pos == 77):   # castle
+                self.board[76] = 7
+                self.board[78] = 0
+                kind = 3
+            elif pos == 75 and (new_pos == 73):
+                self.board[74] = 7
+                self.board[71] = 0
+                kind = 3
+
+
+        elif self.return_figur(pos) == 12:  # black king
+            self.black_king_pos = new_pos
+
+            if pos == 5 and (new_pos == 7):   # castle
+                self.board[6] = 8
+                self.board[8] = 0
+                kind = 3
+            elif pos == 5 and (new_pos == 3):
+                self.board[4] = 8
+                self.board[1] = 0
+                kind = 3
+
+
+
+        # make move
+
+        taken = self.return_figur(new_pos)  # figur that was taken
+        self.board[new_pos] = self.board[pos]  # new place = figur
+        self.board[pos] = 0  # old pace is free ( =0 )
+
+
+
+        # save move
+
+        # datei = pos, new_pos, taken, castlen_white, castlen_black
+        # castlen:
+        #    0 = niemand
+        #    1 = nur rechts
+        #    2 = nur links
+        #    3 = alle
 
         white_cas = 0
         if self.w_castle_King and self.w_castle_Queen:
@@ -486,35 +477,106 @@ class Chessboard:
             white_cas = 1
         elif self.b_castle_Queen:
             white_cas = 2
+
         if white_cas or black_cas:
-            move_datei = (pos, new_pos, taken, white_cas, black_cas)
+            move_datei = [pos, new_pos, taken, white_cas, black_cas]
         else:
-            move_datei = (pos, new_pos, taken)
+            move_datei = [pos, new_pos, taken]
+        if save_enpassant and not self.speicher:
+            move_datei.append(save_enpassant)
+        self.speicher.append(tuple(move_datei))
 
-        self.speicher.append(move_datei)
 
-        self.castle_check(pos)  # sollte ein Rook oder ein King bewegt worden sein wird es gespeichert
+        # sec status-change
+
+
+        self.movecount += 1
+        self.material = material(self.board)
+        if taken:
+            self.board_speicher.clear()
+            self.fifty_move_rule = 0
+
+        if self.check_search(self.black_king_pos, False):
+            self.stat_check = 1  # Black in check
+        elif self.check_search(self.white_king_pos, True):
+            self.stat_check = 2  # White in check
+        else:
+            self.stat_check = 0
+
+        self.castle_check(pos)
+
+        # save board
+        con_board = self.conv_to_FEN()
+        con_board = con_board.split(" ")[0]
+        self.board_speicher.append(con_board)
+
+        return(kind)
 
     def reverse_move(self, my_board=()):
         if not my_board:
             my_board = self.board
-        if not self.speicher:
-            pass
-        else:
+        if self.speicher:
+            # get save
+            datei = self.speicher.pop(len(self.speicher) - 1)   # last saved data get extracted
+            w_cas = 0
+            b_cas = 0
+            enp = 0
+            if len(datei) % 2 == 0:
+                datei = list(datei)
+                enp = datei.pop(len(datei) - 1)
+                datei = tuple(datei)
+
+            if len(datei) == 3:
+                before_pos, now_pos, taken = datei
+            else:
+                before_pos, now_pos, taken, w_cas, b_cas = datei
+
+            # kind of last move
+            if self.return_figur(now_pos) == 1:
+                if taken == 0 and now_pos % 10 != before_pos % 10:   # last move was an enpassant
+                    self.board[now_pos + 10] = 2
+            elif self.return_figur(now_pos) == 2:
+                if taken == 0 and now_pos % 10 != before_pos % 10:
+                    self.board[now_pos - 10] = 1
+
+            if before_pos == 75 and now_pos == 77:   # last move was castle
+                self.board[76] = 0  # neue Feld ist gleich der Figur
+                self.board[78] = 7
+            elif before_pos == 75 and now_pos == 73:
+                self.board[74] = 0
+                self.board[71] = 7
+            elif before_pos == 5 and now_pos == 7:
+                self.board[6] = 0  # neue Feld ist gleich der Figur
+                self.board[8] = 8
+            elif before_pos == 5 and now_pos == 3:
+                self.board[4] = 0
+                self.board[1] = 8
+
+            # return move
+            self.board[before_pos] = self.board[now_pos]
+            self.board[now_pos] = taken
+
+            # search for enpassant, must be after return move cause the enp pawn could be moved
+            if self.speicher:   # search for enpassant by looking at the move before
+                sec_datei = self.speicher[len(self.speicher) - 1]
+                sbefore_pos = sec_datei[1]
+                latest_pos = sec_datei[0]
+                if self.return_figur(sbefore_pos) == 1 or self.return_figur(sbefore_pos) == 2:  # search for enpassant
+                    if (10 < latest_pos < 19 and 30 < sbefore_pos < 39) or (60 < latest_pos < 69 and 40 < sbefore_pos < 49):
+                        self.enpassant = (sbefore_pos + latest_pos) / 2  # mögliche enpassents
+            elif enp:
+                self.enpassant = enp
+
+            # change saves
             if self.board_speicher:
                 del self.board_speicher[len(self.board_speicher) - 1]
             if self.fifty_move_rule:
                 self.fifty_move_rule -= 1
 
-            datei = self.speicher.pop(len(self.speicher) - 1)
-            w_cas = 0
-            b_cas = 0
-            if len(datei) == 3:
-                old_pos, now_pos, taken = datei
-            else:
-                old_pos, now_pos, taken, w_cas, b_cas = datei
 
+            # change status
             self.movecount -= 1  # movecount verringert
+            self.material = material(self.board)
             if w_cas:  # ändert die castle Variablen
                 if w_cas == 1:
                     self.w_castle_King = True
@@ -546,63 +608,14 @@ class Chessboard:
                 self.b_castle_Queen = False
                 self.b_castle_King = False
 
-            if taken != 0:  # material wird zurückgesetzt
-                if taken == 1:
-                    self.material += 1
-                elif taken == 2:
-                    self.material -= 1
-                elif taken == 3:
-                    self.material += 3
-                elif taken == 4:
-                    self.material -= 3
-                elif taken == 5:
-                    self.material += 3
-                elif taken == 6:
-                    self.material -= 3
-                elif taken == 7:
-                    self.material += 5
-                elif taken == 8:
-                    self.material -= 5
-                elif taken == 9:
-                    self.material += 9
-                elif taken == 10:
-                    self.material -= 9
             if now_pos == self.white_king_pos:
-                self.white_king_pos = old_pos  # um leichter nach checks zu suchen wird die pos des Kings gespeichert
+                self.white_king_pos = before_pos  # um leichter nach checks zu suchen wird die pos des Kings gespeichert
             if now_pos == self.black_king_pos:
-                self.black_king_pos = old_pos
+                self.black_king_pos = before_pos
 
-            if self.speicher:
-                sec_datei = self.speicher[len(self.speicher) - 1]
-                pre_pos = sec_datei[0]
-                pre_new_pos = sec_datei[1]
-                if self.return_figur(pre_new_pos) == 1 or self.return_figur(pre_new_pos) == 2:  # wenn die bewegte Figur ein Bauer ist
-                    if (10 < pre_pos < 19 and 30 < pre_new_pos < 39) or (60 < pre_pos < 69 and 40 < pre_new_pos < 49):
-                        self.enpassant = pre_new_pos  # mögliche enpassents
 
-            my_board[old_pos] = my_board[now_pos]  # altes Feld ist gleich der Figur
-            my_board[now_pos] = taken
-
-            if self.check_search(self.black_king_pos, False):
-                self.stat_check = 1
-            elif self.check_search(self.white_king_pos, True):
-                self.stat_check = 2
-            else:
-                self.stat_check = 0
-
-            if old_pos == 75 and now_pos == 77:
-                self.board[76] = 0  # neue Feld ist gleich der Figur
-                self.board[78] = 7
-            elif old_pos == 75 and now_pos == 73:
-                self.board[74] = 0
-                self.board[71] = 7
-            elif old_pos == 5 and now_pos == 7:
-                self.board[6] = 0  # neue Feld ist gleich der Figur
-                self.board[8] = 8
-            elif old_pos == 5 and now_pos == 3:
-                self.board[4] = 0
-                self.board[1] = 8
-
+        else:
+            pass
     def check_pos_moves(self, pos):
         piece = self.return_figur(pos)
         ret = []
@@ -620,6 +633,8 @@ class Chessboard:
 
             if is_black(self.return_figur(pos - 11)):  # checkt Feld links vorne auf Gegner
                 ret.append((pos - 11))
+            if abs(self.enpassant + 10 - pos) == 1:
+                ret.append(self.enpassant)
 
         elif piece == 2:  # moves für schwarzen Bauer
             if self.return_figur(pos + 10) == 0:  # checkt 1 Feld davor
@@ -633,6 +648,9 @@ class Chessboard:
 
             if is_white(self.return_figur(pos + 11)):  # checkt Feld links vorne auf Gegner
                 ret.append((pos + 11))
+
+            if abs(self.enpassant - 10 - pos) == 1:
+                ret.append(self.enpassant)
 
         elif piece == 3 or piece == 4:  # moves für knights
 
@@ -715,8 +733,9 @@ class Chessboard:
         else:
             print("Fehler 274")
 
-        return (self.leagl_moves(pos, ret))
-    def leagl_moves(self, pos, moves):
+        return(self.legal_moves(pos, ret))
+
+    def legal_moves(self, pos, moves):
         if self.return_figur(pos) % 2 == 0:  # nur moves die Check stoppen
             ret = []
             for i in moves:
@@ -735,6 +754,10 @@ class Chessboard:
                 self.reverse_move()
 
         return ret
+    def promotion(self, pos, figur):
+        self.board[pos] = figur
+        self.material = material(self.board)
+
 
     def info(self):
         print(f"""
