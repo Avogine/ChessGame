@@ -1,7 +1,7 @@
 from pathlib import Path
 from colorama import *
 
-use_linux_paths = False  # TODO: use a better way to handle this
+use_linux_paths = True  # TODO: use a better way to handle this
 
 piece_sprite_path = [
     None,
@@ -23,7 +23,7 @@ sprites_path_win = Path(r'~\..\src\sprites')  # windows version
 sprites_path_linux = Path(r'../src/sprites')  # linux version
 
 font_path_win = Path(r'~\..\src\fonts\highway_gothic.ttf')  # windows version
-font_path_linux = Path(r'/../src/sprites/highway_gothic.ttf')  # linux version
+font_path_linux = Path(r'../src/fonts/highway_gothic.ttf')  # linux version
 
 
 """♙♟♘♞♗♝♖♜♕♛♔♚"""
