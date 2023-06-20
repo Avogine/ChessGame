@@ -1,3 +1,7 @@
 ### LICENSES FOR FILES ###
 
 chess pieces: https://opengameart.org/content/chess-pieces from "Anonymous" [CC0]
+
+new pieces: CC0 from PyChess Source
+
+font: https://www.dafont.com/de/highway-gothic.font?a=on&e=on&l[]=10&l[]=1 [CC0]
