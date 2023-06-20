@@ -78,6 +78,7 @@ class GameWindow(Qt.QWidget):
         self.vboxlayout.addLayout(self.hboxlayout)
 
         self.controllayout = QtWidgets.QVBoxLayout()  # stores controls on left side of screen
+        self.controllayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         self.hboxlayout.addLayout(self.controllayout)
 
         # add board to second layout
@@ -97,8 +98,15 @@ class GameWindow(Qt.QWidget):
         self.controllayout.addWidget(self.revert_button)
         self.revert_button.clicked.connect(self.board.reverse_move)
 
+        # add debug info button
+        self.debug_info_button = Qt.QPushButton('DInfo')
+        self.debug_info_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
+        self.debug_info_button.setMinimumSize(100, 100)
+        self.controllayout.addWidget(self.debug_info_button)
+        self.debug_info_button.clicked.connect(lambda: print(self.chess_board.info()))
+
         self.setLayout(self.vboxlayout)
-        self.showFullScreen()
+        self.show()
         self.setWindowTitle('ChessGame - Game')
 
         # fill board
@@ -137,7 +145,6 @@ class HintGrid(QtWidgets.QWidget):
         piece_pos_int = helpers.pos_to_engineint(piece_pos[0], piece_pos[1])
         white_moving = bool(movecount % 2)
         piece_type = self.chess_board.return_figur(piece_pos_int)
-        print("Type", piece_type)
 
         # remove all old hints
         for i in range(63):
@@ -145,16 +152,13 @@ class HintGrid(QtWidgets.QWidget):
             item = self.grid_layout.itemAtPosition(row, column)
             if item != None:
                 self.grid_layout.removeItem(item)
-                print("removed", item, row, column)
                 item.widget().deleteLater() # not sure if needed but lets hope this works
 
         if engine.is_white(piece_type) == white_moving:
             legal_moves = self.chess_board.check_pos_moves(piece_pos_int)
 
             if selected:
-                print("Added")
                 for move in legal_moves:
-                    print(move)
 
                     widget = Hint(fix_size=self.square_size)
                     new_row, new_column = helpers.engineint_to_rowcolumn(move)
@@ -164,7 +168,7 @@ class HintGrid(QtWidgets.QWidget):
 
 
 class Checkerboard(QtWidgets.QWidget):
-    def __init__(self, parent=None, color_bright=QtGui.QColor("#ffffff"), color_dark=QtGui.QColor("#222222"),
+    def __init__(self, parent=None, color_bright=QtGui.QColor("#eeeed2"), color_dark=QtGui.QColor("#769656"),
                  square_size=QtCore.QSize(50, 50)):
         super().__init__(parent=parent)
 
@@ -263,12 +267,7 @@ class Board(Qt.QWidget):
 
     def reverse_move(self):
         self.chess_board.reverse_move()
-
-        print(self.compare_board(self.chess_board.board))
-
         self.update_from_list(self.chess_board.board)
-
-        print(self.compare_board(self.chess_board.board))
 
     def update_from_list(self, board_list=None):
         # remove old pieces
@@ -277,7 +276,6 @@ class Board(Qt.QWidget):
             item = self.grid_layout.itemAtPosition(row, column)
             if item != None:
                 self.grid_layout.removeItem(item)
-                print("removed", item, row, column)
                 item.widget().deleteLater() # not sure if needed but lets hope this works
 
         own_idx = 0
@@ -318,7 +316,7 @@ class Board(Qt.QWidget):
 
         self.chess_board.move(old_pos, new_pos)
 
-        # TODO: to account for changes rebuild whole board
+        # TODO: to account for specific changes (en passant, rochade, ...) rebuild whole board
         if not self.compare_board(self.chess_board.board):
             self.update_from_list(self.chess_board.board)
 
@@ -349,11 +347,9 @@ class Board(Qt.QWidget):
         else:
             self.selected_piece = (-1, -1)
             new_selected_widget.set_select(False)
-            print("deselect", new_selected_widget, self.selected_piece)
 
         # update move hints
         self.hint_grid.set_hints(piece_pos, selected)
-        print("selected", selected)
 
     def invert_piece_selection(self, piece_pos=(0, 0)):
         # check if piece is already selected
@@ -387,7 +383,9 @@ class Board(Qt.QWidget):
             # check if old position equals new position
             if old_column == new_column and old_row == new_row:  # piece was not moved, but selected
                 self.invert_piece_selection((new_column, new_row))
+                print("Same")
             else:  # piece should be moved, deselect
+                print("not the same")
                 self.set_selected_piece((0, 0), False)
 
                 # check if move is made from right color
@@ -402,8 +400,6 @@ class Board(Qt.QWidget):
                 new_engineint = helpers.pos_to_engineint(new_column, new_row)
                 legal_moves = self.chess_board.check_pos_moves(old_engineint)
                 legal = new_engineint in legal_moves
-
-                print(legal_moves, old_row, old_column, old_engineint)
 
                 if right_color and legal:
                     self.move_piece((old_column, old_row), (new_column, new_row))
@@ -439,8 +435,6 @@ class Board(Qt.QWidget):
             child.show()
         else: # normal press action
             pass # TODO: implement press movement
-        
-
 
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
