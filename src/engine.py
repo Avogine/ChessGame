@@ -395,7 +395,7 @@ class Chessboard:
 
     def move(self, pos, new_pos):
         kind = 0
-        senp = 0
+        #new_pos = int(new_pos)
         # first status change
         save_enpassant = self.enpassant
         self.enpassant = 0
@@ -429,7 +429,6 @@ class Chessboard:
                 self.board[74] = 7
                 self.board[71] = 0
                 kind = 3
-
 
         elif self.return_figur(pos) == 12:  # black king
             self.black_king_pos = new_pos
@@ -563,8 +562,8 @@ class Chessboard:
                 latest_pos = sec_datei[0]
                 if self.return_figur(sbefore_pos) == 1 or self.return_figur(sbefore_pos) == 2:  # search for enpassant
                     if (10 < latest_pos < 19 and 30 < sbefore_pos < 39) or (60 < latest_pos < 69 and 40 < sbefore_pos < 49):
-                        self.enpassant = (sbefore_pos + latest_pos) / 2  # mögliche enpassents
-            elif enp:
+                        self.enpassant = int((sbefore_pos + latest_pos) / 2)  # mögliche enpassents
+            else:
                 self.enpassant = enp
 
             # change saves
@@ -722,7 +721,7 @@ class Chessboard:
 
             if self.stat_check != 1:  # castlen
                 if self.b_castle_King and self.return_figur(6) + self.return_figur(7) == 0:
-                    if not self.check_search(6, False) and not self.check_search(77, False):
+                    if not self.check_search(6, False) and not self.check_search(7, False):
                         ret.append(7)
                 if self.b_castle_Queen and self.return_figur(4) + self.return_figur(3) + self.return_figur(
                         2) == 0:
@@ -732,7 +731,6 @@ class Chessboard:
 
         else:
             print("Fehler 274")
-
         return(self.legal_moves(pos, ret))
 
     def legal_moves(self, pos, moves):

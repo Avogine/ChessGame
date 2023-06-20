@@ -1,7 +1,7 @@
 import engine
 
 
-my_board = engine.Chessboard("rnbqk2r/ppp2ppp/5n2/3pp3/1bB2P2/1PN1PN2/P1PP2PP/R1BQK2R w KQkq - 0 1")
+my_board = engine.Chessboard()
 
 def turn():
     if my_board.movecount % 2 == 0:
@@ -160,6 +160,7 @@ def term_render():  # rendert das aktuelle Chessboard
 
 
 def movement(position, move, leg_moves):
+    print(move)
     my_figur = my_board.return_figur(move)
     if move in leg_moves:  # move ist legal
         stat = my_board.move(position, move)
@@ -180,6 +181,7 @@ def movement(position, move, leg_moves):
             r = r.replace(" and ", " ,", i)
             print(f"[T] {my_output(move)} was selected. Your legal moves are {r}")
             new_move = input(f"[{turn()}] Move: ")
+            new_move = my_input(new_move)
             movement(move, new_move, leg_moves)
         else:
             print(f"[T] {my_output(move)} was selected but it has no legal moves")
@@ -292,6 +294,9 @@ def start_normal_game():
 
 
         pos = input(f"[{turn()}] Select: ")
-        select(pos)
+        if pos == "render":
+            pass
+        else:
+            select(pos)
 
 
