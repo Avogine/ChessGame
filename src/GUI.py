@@ -78,6 +78,7 @@ class GameWindow(Qt.QWidget):
         self.vboxlayout.addLayout(self.hboxlayout)
 
         self.controllayout = QtWidgets.QVBoxLayout()  # stores controls on left side of screen
+        self.controllayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         self.hboxlayout.addLayout(self.controllayout)
 
         # add board to second layout
@@ -96,6 +97,13 @@ class GameWindow(Qt.QWidget):
         self.revert_button.setMinimumSize(100, 100)
         self.controllayout.addWidget(self.revert_button)
         self.revert_button.clicked.connect(self.board.reverse_move)
+
+        # add debug info button
+        self.debug_info_button = Qt.QPushButton('DInfo')
+        self.debug_info_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
+        self.debug_info_button.setMinimumSize(100, 100)
+        self.controllayout.addWidget(self.debug_info_button)
+        self.debug_info_button.clicked.connect(lambda: print(self.chess_board.info()))
 
         self.setLayout(self.vboxlayout)
         self.show()
@@ -308,7 +316,7 @@ class Board(Qt.QWidget):
 
         self.chess_board.move(old_pos, new_pos)
 
-        # TODO: to account for changes rebuild whole board
+        # TODO: to account for specific changes (en passant, rochade, ...) rebuild whole board
         if not self.compare_board(self.chess_board.board):
             self.update_from_list(self.chess_board.board)
 
@@ -427,8 +435,6 @@ class Board(Qt.QWidget):
             child.show()
         else: # normal press action
             pass # TODO: implement press movement
-        
-
 
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
