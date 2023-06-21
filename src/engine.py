@@ -423,11 +423,13 @@ class Chessboard:
         elif self.return_figur(pos) == 11:  # white king
             self.white_king_pos = new_pos  # save king position
 
-            if pos == 75 and (new_pos == 77):   # castle
+            if pos == 75 and (new_pos == 77 or new_pos == 78): # castle
+                new_pos = 77
                 self.board[76] = 7
                 self.board[78] = 0
                 kind = 3
-            elif pos == 75 and (new_pos == 73):
+            elif pos == 75 and (new_pos == 73 or new_pos == 72 or new_pos == 71):
+                new_pos = 73
                 self.board[74] = 7
                 self.board[71] = 0
                 kind = 3
@@ -435,11 +437,13 @@ class Chessboard:
         elif self.return_figur(pos) == 12:  # black king
             self.black_king_pos = new_pos
 
-            if pos == 5 and (new_pos == 7):   # castle
+            if pos == 5 and (new_pos == 7 or new_pos == 8):   # castle
+                new_pos = 7
                 self.board[6] = 8
                 self.board[8] = 0
                 kind = 3
-            elif pos == 5 and (new_pos == 3):
+            elif pos == 5 and (new_pos == 3 or new_pos == 2 or new_pos == 1):
+                new_pos = 3
                 self.board[4] = 8
                 self.board[1] = 0
                 kind = 3
@@ -709,11 +713,14 @@ class Chessboard:
                 if self.w_castle_King and self.return_figur(76) + self.return_figur(77) == 0:
                     if not self.check_search(76, True) and not self.check_search(77, True):
                         ret.append(77)
+                        ret.append(78)
                 if self.w_castle_Queen and self.return_figur(74) + self.return_figur(73) + self.return_figur(
                         72) == 0:
                     if not self.check_search(72, True) and not self.check_search(73, True) and not self.check_search(74,
                                                                                                                      True):
                         ret.append(73)
+                        ret.append(72)
+                        ret.append(71)
 
         elif piece == 12:  # moves for the black king
             for i in [1, 9, 10, 11, -11, -10, -9, -1]:
@@ -725,12 +732,14 @@ class Chessboard:
                 if self.b_castle_King and self.return_figur(6) + self.return_figur(7) == 0:
                     if not self.check_search(6, False) and not self.check_search(7, False):
                         ret.append(7)
+                        ret.append(8)
                 if self.b_castle_Queen and self.return_figur(4) + self.return_figur(3) + self.return_figur(
                         2) == 0:
                     if not self.check_search(2, False) and not self.check_search(3, False) and not self.check_search(4,
                                                                                                                      False):
                         ret.append(3)
-
+                        ret.append(2)
+                        ret.append(1)
         else:
             print("Fehler 274")
         solution = self.legal_moves(pos, ret)
