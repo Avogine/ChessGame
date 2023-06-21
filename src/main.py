@@ -1,7 +1,7 @@
 import GUI
 import engine
 import random
-import Terminal_GUI
+
 
 gui = GUI.GUI()
 

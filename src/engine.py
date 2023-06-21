@@ -144,7 +144,8 @@ def con_Table(fen):   # r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w 
 
 # static variables:
 
-standartborad = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
+standartboard = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
+
 
 # piece types: pawn knight bishop rook queen king
 # white:       1    3      5      7    9     11
@@ -154,13 +155,14 @@ standartborad = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
 # TODO: enpassent, remis, promotion
 class Chessboard:
 
-    def __init__(self, my_board=standartborad):
+    def __init__(self, my_board=standartboard):
         self.board, turn, self.w_castle_King, self.w_castle_Queen, self.b_castle_King, self.b_castle_Queen, self.enpassant, self.fifty_move_rule, self.movecount = con_Table(my_board)  # board infos
         self.movecount += 1
         self.speicher = []  # Speicher Züge für def reverse_move()
         self.board_speicher = []  # Speicher gesamtes Spielfeld als FEN falls es sich 3 mal wiederholt
 
-        self.stat_check = 0
+        self.w_check = False
+        self.b_check = False
         self.material = material(self.board)
 
         self.black_king_pos = 5  # traced die Position des Kings um leichter nach Checks zu suchen
@@ -384,7 +386,7 @@ class Chessboard:
             if i >= 2:
                 return 2  # remis wegen wiederholter Stellung
         elif not self.all_moves:
-            if self.stat_check:
+            if not self.b_check and not self.w_check:
                 return 3  # remis wegen Stealmate
             else:
                 return 4  # Checkmate
@@ -496,11 +498,12 @@ class Chessboard:
             self.fifty_move_rule = 0
 
         if self.check_search(self.black_king_pos, False):
-            self.stat_check = 1  # Black in check
+            self.b_check = True  # Black in check
         elif self.check_search(self.white_king_pos, True):
-            self.stat_check = 2  # White in check
+            self.w_check = True  # White in check
         else:
-            self.stat_check = 0
+            self.w_check = False
+            self.b_check = False
 
         self.castle_check(pos)
 
@@ -556,6 +559,7 @@ class Chessboard:
             self.board[now_pos] = taken
 
             # search for enpassant, must be after return move cause the enp pawn could be moved
+            self.enpassant = enp
             if self.speicher:   # search for enpassant by looking at the move before
                 sec_datei = self.speicher[len(self.speicher) - 1]
                 sbefore_pos = sec_datei[1]
@@ -563,8 +567,7 @@ class Chessboard:
                 if self.return_figur(sbefore_pos) == 1 or self.return_figur(sbefore_pos) == 2:  # search for enpassant
                     if (10 < latest_pos < 19 and 30 < sbefore_pos < 39) or (60 < latest_pos < 69 and 40 < sbefore_pos < 49):
                         self.enpassant = int((sbefore_pos + latest_pos) / 2)  # mögliche enpassents
-            else:
-                self.enpassant = enp
+
 
             # change saves
             if self.board_speicher:
@@ -611,7 +614,6 @@ class Chessboard:
                 self.white_king_pos = before_pos  # um leichter nach checks zu suchen wird die pos des Kings gespeichert
             if now_pos == self.black_king_pos:
                 self.black_king_pos = before_pos
-
 
         else:
             pass
@@ -703,7 +705,7 @@ class Chessboard:
                 if self.return_figur(new_pos) == 0 or is_black(self.return_figur(new_pos)):
                     ret.append(new_pos)
 
-            if self.stat_check != 2:  # castlen
+            if not self.w_check:  # castlen
                 if self.w_castle_King and self.return_figur(76) + self.return_figur(77) == 0:
                     if not self.check_search(76, True) and not self.check_search(77, True):
                         ret.append(77)
@@ -719,7 +721,7 @@ class Chessboard:
                 if self.return_figur(new_pos) == 0 or is_white(self.return_figur(new_pos)):
                     ret.append(new_pos)
 
-            if self.stat_check != 1:  # castlen
+            if not self.b_check:  # castlen
                 if self.b_castle_King and self.return_figur(6) + self.return_figur(7) == 0:
                     if not self.check_search(6, False) and not self.check_search(7, False):
                         ret.append(7)
@@ -731,14 +733,19 @@ class Chessboard:
 
         else:
             print("Fehler 274")
-        return(self.legal_moves(pos, ret))
+        solution = self.legal_moves(pos, ret)
+        print(solution)
+        return(solution)
+
 
     def legal_moves(self, pos, moves):
         if self.return_figur(pos) % 2 == 0:  # nur moves die Check stoppen
             ret = []
             for i in moves:
+
                 self.move(pos, i)
-                if self.stat_check != 1:
+
+                if not self.b_check:
                     ret.append(i)
 
                 self.reverse_move()
@@ -747,7 +754,7 @@ class Chessboard:
             ret = []
             for i in moves:
                 self.move(pos, i)
-                if self.stat_check != 2:
+                if not self.w_check:
                     ret.append(i)
                 self.reverse_move()
 
@@ -759,17 +766,20 @@ class Chessboard:
 
     def info(self):
         print(f"""
-        {self.board}
-        {self.w_castle_King}
-        {self.w_castle_Queen}
-        {self.b_castle_King}
-        {self.b_castle_Queen }
-        {self.fifty_move_rule}
-        {self.enpassant}
-        {self.movecount}
-        {self.speicher}  
-        {self.board_speicher}  
-        {self.stat_check}
-        {self.material}
-        {self.black_king_pos}  
-        {self.white_king_pos}"""  )
+        {self.board}    board
+        {self.w_castle_King}    w_castle_King
+        {self.w_castle_Queen}   w_castle_Queen
+        {self.b_castle_King}    b_castle_King
+        {self.b_castle_Queen}  b_castle_Queen
+        {self.fifty_move_rule}  fifty_move_rule
+        {self.enpassant}    enpassant
+        {self.movecount}    movecount
+        {self.speicher}     speicher
+        {self.board_speicher}   board_speicher  
+        {self.w_check}   white_check
+        {self.b_check}   black_check
+        {self.material}   material
+        {self.black_king_pos}   black_king_pos  
+        {self.white_king_pos}   white_king_pos
+        {self.conv_to_FEN()} FEN
+"""  )

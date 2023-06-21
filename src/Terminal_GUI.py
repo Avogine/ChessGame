@@ -1,8 +1,8 @@
 import engine
 
 
-my_board = engine.Chessboard()
-
+my_board = engine.Chessboard("rnbq2nr/ppppkppp/8/4p3/1b2P3/3P4/PPPB1PPP/RN1QKBNR w KQ - 0 8")
+#2bq1k2/2pppp2/8/8/1b6/2B5/2P1P3/3QK3 w - - 0 2
 def turn():
     if my_board.movecount % 2 == 0:
         return "B"
@@ -300,3 +300,4 @@ def start_normal_game():
             select(pos)
 
 
+start_normal_game()
