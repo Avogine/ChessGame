@@ -33,7 +33,7 @@ class GUI(QtWidgets.QApplication):
 
     def stop_game(self):
         # remove old window instance
-        del self.game_window
+        self.game_window.deleteLater()
 
         # show menu window
         self.menu_window.show()
@@ -74,6 +74,7 @@ class GameWindow(Qt.QWidget):
         self.chess_board = engine.Chessboard()
 
         self.vboxlayout = QtWidgets.QVBoxLayout()  # storing the top part (board and controls) and bottom (statistics)
+        self.vboxlayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.hboxlayout = QtWidgets.QHBoxLayout()  # this second layout stores the board and controls
         self.vboxlayout.addLayout(self.hboxlayout)
 

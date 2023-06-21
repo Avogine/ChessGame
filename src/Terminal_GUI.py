@@ -299,5 +299,7 @@ def start_normal_game():
         else:
             select(pos)
 
+start_normal_game()
+
 
 start_normal_game()
