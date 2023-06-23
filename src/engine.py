@@ -789,7 +789,14 @@ class Chessboard:
         self.move(my_input(pose), my_input(move))
         stockfish.make_moves_from_current_position([pose + move])
 
-
+    def s_configure(self, skill=0, elo=0, depth=
+    0):
+        if skill:
+            stockfish.set_skill_level(int(skill))
+        if elo:
+            stockfish.set_elo_rating(int(elo))
+        if depth:
+            stockfish.set_depth(int(depth))
 
     def info(self):
         print(f"""
