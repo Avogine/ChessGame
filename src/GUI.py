@@ -69,6 +69,9 @@ class StartMenu(Qt.QWidget):
 class GameWindow(Qt.QWidget):
     def __init__(self):
         super().__init__()
+        # variables
+        self.margin = 5
+        self.button_size = Qt.QSize(100 - self.margin, 100 - self.margin)
 
         # make playboard_engine instance
         self.chess_board = engine.Chessboard()
@@ -89,20 +92,20 @@ class GameWindow(Qt.QWidget):
         # add stop button
         self.stop_button = Qt.QPushButton('Stop')
         self.stop_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
-        self.stop_button.setMinimumSize(100, 100)
+        self.stop_button.setMinimumSize(self.button_size)
         self.controllayout.addWidget(self.stop_button)
 
         # add revert button
         self.revert_button = Qt.QPushButton('<-')
         self.revert_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
-        self.revert_button.setMinimumSize(100, 100)
+        self.revert_button.setMinimumSize(self.button_size)
         self.controllayout.addWidget(self.revert_button)
         self.revert_button.clicked.connect(self.board.reverse_move)
 
         # add debug info button
         self.debug_info_button = Qt.QPushButton('DInfo')
         self.debug_info_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
-        self.debug_info_button.setMinimumSize(100, 100)
+        self.debug_info_button.setMinimumSize(self.button_size)
         self.controllayout.addWidget(self.debug_info_button)
         self.debug_info_button.clicked.connect(lambda: print(self.chess_board.info()))
 
@@ -317,7 +320,7 @@ class Board(Qt.QWidget):
 
         self.chess_board.move(old_pos, new_pos)
 
-        # TODO: to account for specific changes (en passant, rochade, ...) rebuild whole board
+        # to account for specific changes (en passant, rochade, ...) rebuild whole board
         if not self.compare_board(self.chess_board.board):
             self.update_from_list(self.chess_board.board)
 
@@ -384,9 +387,7 @@ class Board(Qt.QWidget):
             # check if old position equals new position
             if old_column == new_column and old_row == new_row:  # piece was not moved, but selected
                 self.invert_piece_selection((new_column, new_row))
-                print("Same")
             else:  # piece should be moved, deselect
-                print("not the same")
                 self.set_selected_piece((0, 0), False)
 
                 # check if move is made from right color
@@ -435,7 +436,23 @@ class Board(Qt.QWidget):
             # clean up
             child.show()
         else: # normal press action
-            pass # TODO: implement press movement
+            pass # TODO: implement # press movement
+
+        # possibilities:
+        # click on empty square:
+        # -> own piece is selected:
+        # -> -> move own piece
+        # click on square with piece:
+        # -> own piece is currently selected:
+        # -> -> target square has opponent piece:
+        # -> -> -> take piece
+        # -> -> target square is empty:
+        # -> -> -> if move is legal: move piece
+        #
+        # -> no piece is selected:
+        # -> -> select own piece and show possible moves
+        # -> own piece is selected:
+        # -> -> deselect own piece
 
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
