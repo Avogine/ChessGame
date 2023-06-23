@@ -46,11 +46,18 @@ def get_piece_sprite_path(idx=0):
         return Path(sprites_path_win, get_piece_name(idx))
 
 
+def get_stockfish_path():
+    if use_linux_paths:
+        return r'../src/stockfish/linux/stockfish_15.1_linux_x64/stockfish-ubuntu-20.04-x86-64'
+    else:
+        return r"C:\Users\david\Desktop\Python\ChessGame\src\stockfish\stockfish_15.1_win_x64_popcnt\stockfish-windows-2022-x86-64-modern.exe" # FIXME
+
+
 def get_marker_sprite_path():
     if use_linux_paths:
-        return Path(sprites_path_linux, "marker.png")
+        return Path(sprites_path_linux, "pawn.png")
     else:
-        return Path(sprites_path_win, "marker.png")
+        return Path(sprites_path_win, "pawn.png")
 
 
 def int_to_rowcolumn(int_pos=0, rowcount=8, colcount=8) -> tuple:

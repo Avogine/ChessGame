@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 import engine
 import helpers
 from random import randrange
+import time
 
 
 class GUI(QtWidgets.QApplication):
@@ -104,8 +105,11 @@ class GameWindowStockfish(Qt.QWidget):
 
         # TODO: implement other playable colors with stockfish
         # add board to second layout
-        self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100), playable_color='w') # FIXME: hardcode w
+        self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100), playable_color='w', use_external_moves=True)  # FIXME: hardcode
         self.hboxlayout.addWidget(self.board)
+
+        # configure stockfish
+        self.chess_board.s_configure(15, 10000, 15)
 
         # add stop button
         self.stop_button = Qt.QPushButton('Stop')
@@ -117,7 +121,7 @@ class GameWindowStockfish(Qt.QWidget):
         self.revert_button = Qt.QPushButton('<-')
         self.revert_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
         self.revert_button.setMinimumSize(self.button_size)
-        self.controllayout.addWidget(self.revert_button)
+        #self.controllayout.addWidget(self.revert_button)  # FIXME: reversing moves not possible
         self.revert_button.clicked.connect(self.board.reverse_move)
 
         # add debug info button
@@ -281,12 +285,13 @@ class Checkerboard(QtWidgets.QWidget):
 
 class Board(Qt.QWidget):
     def __init__(self, chess_board, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"),
-                 square_size=Qt.QSize(50, 50), playable_color=''):
+                 square_size=Qt.QSize(50, 50), playable_color='', use_external_moves=False):
         super().__init__()
 
         self.square_size = square_size
         self.chess_board = chess_board
         self.playable_color = playable_color
+        self.use_external_moves = use_external_moves
 
         # add background
         self.checkerboard = Checkerboard(parent=self, square_size=self.square_size)
@@ -388,11 +393,19 @@ class Board(Qt.QWidget):
         old_pos = helpers.pos_to_engineint(old_column, old_row)
         new_pos = helpers.pos_to_engineint(new_column, new_row)
 
-        self.chess_board.move(old_pos, new_pos)
+        if not self.use_external_moves:
+            self.chess_board.move(old_pos, new_pos)
+        else:
+            self.chess_board.s_move(old_pos, new_pos)
 
         # to account for specific changes (en passant, rochade, ...) rebuild whole board
         if not self.compare_board(self.chess_board.board):
             self.update_from_list(self.chess_board.board)
+
+        # TODO: put this somewhere else
+        # make external moves
+        if self.use_external_moves:
+            self.make_external_move()
 
     def set_piece(self, row=0, column=0, piece_id=0):
         # remove piece
@@ -411,8 +424,9 @@ class Board(Qt.QWidget):
 
         # deselect, even if we might select it again
         if self.selected_piece != (-1, -1):
-            last_selected_widget: ChessPiece = self.grid_layout.itemAtPosition(self.selected_piece[1], self.selected_piece[0]).widget()
-            last_selected_widget.set_select(False)
+            last_selected_item: ChessPiece = self.grid_layout.itemAtPosition(self.selected_piece[1], self.selected_piece[0])
+            if self.grid_layout.itemAtPosition(self.selected_piece[1], self.selected_piece[0]) is not None:
+                last_selected_item.widget().set_select(False)
 
         # select or deselect new one
         if selected:
@@ -546,6 +560,11 @@ class Board(Qt.QWidget):
         # -> -> select own piece and show possible moves
         # -> own piece is selected:
         # -> -> deselect own piece
+
+    def make_external_move(self):
+        self.chess_board.stockfish_move()
+
+        self.update_from_list(self.chess_board.board)
 
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()

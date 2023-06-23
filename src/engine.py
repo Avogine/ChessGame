@@ -1,7 +1,7 @@
 from stockfish import Stockfish
 
 
-stockfish = Stockfish(path=r"C:\Users\david\Desktop\Python\ChessGame\src\stockfish\stockfish_15.1_win_x64_popcnt\stockfish-windows-2022-x86-64-modern.exe")
+stockfish = Stockfish(path=r"../src/stockfish/linux/stockfish_15.1_linux_x64/stockfish-ubuntu-20.04-x86-64")
 # static functions:
 def material(board):  # gibt den aktuellen Materialwert (Weis als + und Schwarz als - int)
     ret = 0
@@ -778,7 +778,7 @@ class Chessboard:
     def s_move(self, pos, new_pos):
         self.move(pos, new_pos)
         movement = my_output(pos) + my_output(new_pos)
-        stockfish.make_moves_from_current_position(movement)
+        stockfish.make_moves_from_current_position([movement])
 
     def stockfish_move(self):
         best = stockfish.get_best_move()
@@ -789,8 +789,7 @@ class Chessboard:
         self.move(my_input(pose), my_input(move))
         stockfish.make_moves_from_current_position([pose + move])
 
-    def s_configure(self, skill=0, elo=0, depth=
-    0):
+    def s_configure(self, skill=0, elo=0, depth=0):
         if skill:
             stockfish.set_skill_level(int(skill))
         if elo:
