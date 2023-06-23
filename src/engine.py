@@ -1,3 +1,7 @@
+from stockfish import Stockfish
+
+
+stockfish = Stockfish(path=r"C:\Users\david\Desktop\Python\ChessGame\src\stockfish\stockfish_15.1_win_x64_popcnt\stockfish-windows-2022-x86-64-modern.exe")
 # static functions:
 def material(board):  # gibt den aktuellen Materialwert (Weis als + und Schwarz als - int)
     ret = 0
@@ -743,7 +747,6 @@ class Chessboard:
         else:
             print("Fehler 274")
         solution = self.legal_moves(pos, ret)
-        print(solution)
         return(solution)
 
 
@@ -771,6 +774,21 @@ class Chessboard:
     def promotion(self, pos, figur):
         self.board[pos] = figur
         self.material = material(self.board)
+
+    def s_move(self, pos, new_pos):
+        self.move(pos, new_pos)
+        movement = my_output(pos) + my_output(new_pos)
+        stockfish.make_moves_from_current_position(movement)
+
+    def stockfish_move(self):
+        best = stockfish.get_best_move()
+        a, b, c, d = list(best)
+        pose = a + b
+        move = c + d
+
+        self.move(my_input(pose), my_input(move))
+        stockfish.make_moves_from_current_position([pose + move])
+
 
 
     def info(self):
