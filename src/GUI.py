@@ -1,5 +1,4 @@
 import random
-
 from PyQt5 import QtCore, QtWidgets, QtGui, Qt
 import engine
 import helpers
@@ -18,9 +17,20 @@ class GUI(QtWidgets.QApplication):
         # add start window
         self.menu_window = StartMenu()
         self.menu_window.start_button.clicked.connect(self.start_game)
+        self.menu_window.stockfish_button.clicked.connect(self.start_stockfish_game)
 
         # run
         self.exec()
+
+
+    def start_stockfish_game(self):
+        # hide start menu
+        self.menu_window.hide()
+
+        # add main window
+        self.game_window = GameWindowStockfish()
+        self.game_window.stop_button.clicked.connect(self.stop_game)
+
 
     def start_game(self):
         # hide start menu
@@ -63,7 +73,66 @@ class StartMenu(Qt.QWidget):
         self.main_layout.addWidget(self.start_button)
         self.main_layout.setAlignment(self.start_button, QtCore.Qt.AlignmentFlag.AlignHCenter)
 
+        # add stockfish button
+        self.stockfish_button = QtWidgets.QPushButton("Start local stockfish game.")
+        self.stockfish_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Minimum)
+        self.stockfish_button.setMinimumSize(600, 100)
+        self.main_layout.addWidget(self.stockfish_button)
+        self.main_layout.setAlignment(self.stockfish_button, QtCore.Qt.AlignmentFlag.AlignHCenter)
+
         self.show()
+
+
+class GameWindowStockfish(Qt.QWidget):
+    def __init__(self):
+        super().__init__()
+        # variables
+        self.margin = 5
+        self.button_size = Qt.QSize(100 - self.margin, 100 - self.margin)
+
+        # make playboard_engine instance
+        self.chess_board = engine.Chessboard()
+
+        self.vboxlayout = QtWidgets.QVBoxLayout()  # storing the top part (board and controls) and bottom (statistics)
+        self.vboxlayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.hboxlayout = QtWidgets.QHBoxLayout()  # this second layout stores the board and controls
+        self.vboxlayout.addLayout(self.hboxlayout)
+
+        self.controllayout = QtWidgets.QVBoxLayout()  # stores controls on left side of screen
+        self.controllayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
+        self.hboxlayout.addLayout(self.controllayout)
+
+        # TODO: implement other playable colors with stockfish
+        # add board to second layout
+        self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100), playable_color='w') # FIXME: hardcode w
+        self.hboxlayout.addWidget(self.board)
+
+        # add stop button
+        self.stop_button = Qt.QPushButton('Stop')
+        self.stop_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
+        self.stop_button.setMinimumSize(self.button_size)
+        self.controllayout.addWidget(self.stop_button)
+
+        # add revert button
+        self.revert_button = Qt.QPushButton('<-')
+        self.revert_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
+        self.revert_button.setMinimumSize(self.button_size)
+        self.controllayout.addWidget(self.revert_button)
+        self.revert_button.clicked.connect(self.board.reverse_move)
+
+        # add debug info button
+        self.debug_info_button = Qt.QPushButton('DInfo')
+        self.debug_info_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
+        self.debug_info_button.setMinimumSize(self.button_size)
+        self.controllayout.addWidget(self.debug_info_button)
+        self.debug_info_button.clicked.connect(lambda: print(self.chess_board.info()))
+
+        self.setLayout(self.vboxlayout)
+        self.show()
+        self.setWindowTitle('ChessGame - Game')
+
+        # fill board
+        self.board.update_from_list(self.chess_board.board)
 
 
 class GameWindow(Qt.QWidget):
@@ -212,11 +281,12 @@ class Checkerboard(QtWidgets.QWidget):
 
 class Board(Qt.QWidget):
     def __init__(self, chess_board, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"),
-                 square_size=Qt.QSize(50, 50)):
+                 square_size=Qt.QSize(50, 50), playable_color=''):
         super().__init__()
 
         self.square_size = square_size
         self.chess_board = chess_board
+        self.playable_color = playable_color
 
         # add background
         self.checkerboard = Checkerboard(parent=self, square_size=self.square_size)
@@ -233,10 +303,6 @@ class Board(Qt.QWidget):
 
         # add grid layout in front of true pieces for hints
         self.hint_grid = HintGrid(self, self.chess_board, square_size)
-        self.hint_grid.raise_()
-        self.hint_grid.raise_()
-        self.hint_grid.raise_()
-
 
         # set minimum width and height, else the layout just collapses
         for i in range(8):
@@ -274,10 +340,14 @@ class Board(Qt.QWidget):
         self.update_from_list(self.chess_board.board)
 
     def update_from_list(self, board_list=None):
+        # deselect all selected pieces
+        self.hint_grid.set_hints((-1, -1))
+
         # remove old pieces
         for i in range(64): # range 64 means including only 63
             row, column = helpers.int_to_rowcolumn(i)
             item = self.grid_layout.itemAtPosition(row, column)
+            print('Removed ', row, column)
             if item != None:
                 self.grid_layout.removeItem(item)
                 item.widget().deleteLater() # not sure if needed but lets hope this works
@@ -410,31 +480,54 @@ class Board(Qt.QWidget):
         # get child from position
         child = self.childAt(event.pos())
         if isinstance(child, ChessPiece):
-            # get pixmap
-            pixmap = child.get_drag_sprite()
+            # get piece position
+            grid_size = self.grid_layout.sizeHint()
+            mouse_normalized = event.pos()
+            column = int(((mouse_normalized.x() / grid_size.width()) * 8))
+            row = int(((mouse_normalized.y() / grid_size.height()) * 8))
 
-            # construct data stream
-            mimedata = Qt.QMimeData()
-            piece_idx = self.grid_layout.indexOf(child)
-            piece_pos = self.grid_layout.getItemPosition(piece_idx)
-            piece_pos_string = 'position|' + str(piece_pos[1]) + '|' + str(piece_pos[0])
-            piece_pos_bytes = piece_pos_string.encode("UTF-8")
-            mimedata.setData('application/chessgame-drag', piece_pos_bytes)
+            # get piece color
+            movecount = self.chess_board.movecount
+            piece_pos_int = helpers.pos_to_engineint(column, row)
+            white_moving = bool(movecount % 2)
+            piece_type = self.chess_board.return_figur(piece_pos_int)
+            right_color = white_moving == engine.is_white(piece_type)
 
-            # create drag object
-            drag = Qt.QDrag(self)
-            drag.setMimeData(mimedata)
-            drag.setPixmap(pixmap)
-            drag.setHotSpot(event.pos() - child.pos())
+            # check if move from that color is allowed
+            color_allowed = False
+            if engine.is_white(piece_type) and self.playable_color == 'w':
+                color_allowed = True
+            elif not engine.is_white(piece_type) and self.playable_color == 'b':
+                color_allowed = True
+            elif self.playable_color == '':
+                color_allowed = True
 
-            # hide image
-            child.hide()
+            if right_color and color_allowed:
+                # get pixmap
+                pixmap = child.get_drag_sprite()
 
-            # execute
-            drag.exec()
+                # construct data stream
+                mimedata = Qt.QMimeData()
+                piece_idx = self.grid_layout.indexOf(child)
+                piece_pos = self.grid_layout.getItemPosition(piece_idx)
+                piece_pos_string = 'position|' + str(piece_pos[1]) + '|' + str(piece_pos[0])
+                piece_pos_bytes = piece_pos_string.encode("UTF-8")
+                mimedata.setData('application/chessgame-drag', piece_pos_bytes)
 
-            # clean up
-            child.show()
+                # create drag object
+                drag = Qt.QDrag(self)
+                drag.setMimeData(mimedata)
+                drag.setPixmap(pixmap)
+                drag.setHotSpot(event.pos() - child.pos())
+
+                # hide image
+                child.hide()
+
+                # execute
+                drag.exec()
+
+                # clean up
+                child.show()
         else: # normal press action
             pass # TODO: implement # press movement
 
