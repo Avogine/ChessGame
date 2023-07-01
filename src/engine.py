@@ -1,7 +1,7 @@
 from stockfish import Stockfish
+import helpers
 
-
-stockfish = Stockfish(path=r"../src/stockfish/linux/stockfish_15.1_linux_x64/stockfish-ubuntu-20.04-x86-64")
+stockfish = Stockfish(helpers.get_stockfish_path())
 # static functions:
 def material(board):  # gibt den aktuellen Materialwert (Weis als + und Schwarz als - int)
     ret = 0
@@ -156,7 +156,7 @@ standartboard = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
 # black:       2    4      6      8    10    12
 # 13: invalid/ wall
 
-# TODO: enpassent, remis, promotion
+# TODO: remis, promotion
 class Chessboard:
 
     def __init__(self, my_board=standartboard):
@@ -382,6 +382,11 @@ class Chessboard:
     def check_all(self):
         if self.fifty_move_rule == 50:
             return 1  # remis wegen 50-Move Rule
+        elif not self.all_moves():
+            if self.w_check or self.b_check:
+                return 3  # Checkmate
+            else:
+                return 4  # remis wegen Stealmate
         elif self.board in self.board_speicher:
             i = 0
             for x in self.board_speicher:
@@ -389,11 +394,8 @@ class Chessboard:
                     i += 1
             if i >= 2:
                 return 2  # remis wegen wiederholter Stellung
-        elif not self.all_moves:
-            if not self.b_check and not self.w_check:
-                return 3  # remis wegen Stealmate
             else:
-                return 4  # Checkmate
+                return 0
         else:
             return 0
 
@@ -519,7 +521,6 @@ class Chessboard:
         con_board = self.conv_to_FEN()
         con_board = con_board.split(" ")[0]
         self.board_speicher.append(con_board)
-
         return(kind)
 
     def reverse_move(self, my_board=()):
@@ -745,7 +746,9 @@ class Chessboard:
                         ret.append(2)
                         ret.append(1)
         else:
-            print("Fehler 274")
+            print(f"Fehler 274"
+                  f" Figure = {piece}"
+                  f" Position = {pos}")
         solution = self.legal_moves(pos, ret)
         return(solution)
 
