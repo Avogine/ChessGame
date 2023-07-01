@@ -40,11 +40,20 @@ class GUI(QtWidgets.QApplication):
         # add main window
         self.game_window = GameWindow()
         self.game_window.stop_button.clicked.connect(self.stop_game)
+        self.game_window.gamecontroller.game_over.connect(self.show_gameover_window)
+
+
+    def show_gameover_window(self, gameover_message=''):
+        # add gameover window
+        self.gameover_window = GameOverWindow(gameover_message)
+
+        self.gameover_window.back_button.clicked.connect(self.stop_game)
 
 
     def stop_game(self):
-        # remove old window instance
+        # remove old window instances
         self.game_window.deleteLater()
+        self.gameover_window.deleteLater()
 
         # show menu window
         self.menu_window.show()
@@ -162,6 +171,9 @@ class GameWindow(Qt.QWidget):
         self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100))
         self.hboxlayout.addWidget(self.board)
 
+        # add gamecontroller
+        self.gamecontroller = GameController(self.board, self.chess_board)
+
         # add stop button
         self.stop_button = Qt.QPushButton('Stop')
         self.stop_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
@@ -173,7 +185,7 @@ class GameWindow(Qt.QWidget):
         self.revert_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
         self.revert_button.setMinimumSize(self.button_size)
         self.controllayout.addWidget(self.revert_button)
-        self.revert_button.clicked.connect(self.board.reverse_move)
+        self.revert_button.clicked.connect(self.gamecontroller.reverse_move)
 
         # add debug info button
         self.debug_info_button = Qt.QPushButton('DInfo')
@@ -188,6 +200,30 @@ class GameWindow(Qt.QWidget):
 
         # fill board
         self.board.update_from_list(self.chess_board.board)
+
+
+class GameOverWindow(QtWidgets.QWidget):
+    def __init__(self, gameover_message=''):
+        super().__init__()
+
+        # add main layout
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.setContentsMargins(100, 100, 100, 100)
+        self.main_layout.setSpacing(50)
+        self.setWindowTitle('ChessGame - Start Menu')
+
+        # add buttons and labels
+        self.main_label = QtWidgets.QLabel('Game Over\n-\nReason:\n ' + gameover_message)
+        self.main_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
+        self.main_layout.addWidget(self.main_label)
+
+        self.back_button = QtWidgets.QPushButton("Return to main menu.")
+        self.back_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Minimum)
+        self.back_button.setMinimumSize(400, 100)
+        self.main_layout.addWidget(self.back_button)
+        self.main_layout.setAlignment(self.back_button, QtCore.Qt.AlignmentFlag.AlignHCenter)
+
+        self.show()
 
 
 class HintGrid(QtWidgets.QWidget):
@@ -284,13 +320,15 @@ class Checkerboard(QtWidgets.QWidget):
 
 
 class Board(Qt.QWidget):
+    # signals
+    move_done = QtCore.pyqtSignal()
+
     def __init__(self, chess_board, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"),
-                 square_size=Qt.QSize(50, 50), playable_color='', use_external_moves=False):
+                 square_size=Qt.QSize(50, 50), use_external_moves=False):
         super().__init__()
 
         self.square_size = square_size
         self.chess_board = chess_board
-        self.playable_color = playable_color
         self.use_external_moves = use_external_moves
 
         # add background
@@ -316,6 +354,17 @@ class Board(Qt.QWidget):
 
         # variables
         self.selected_piece = (-1, -1)
+        self.current_turn_type = 'white'  # can either be white, black, or external
+
+        # signals
+        #self.move_done = QtCore.pyqtSignal()  # color is represented as string (black/white)
+
+    def allow_next_move(self, turn_type: str):
+        match turn_type:
+            case 'black':
+                self.current_turn_type = 'black'
+            case 'white':
+                self.current_turn_type = 'white'
 
     def compare_board(self, engine_board):
         equal = True
@@ -340,10 +389,6 @@ class Board(Qt.QWidget):
 
         return equal
 
-    def reverse_move(self):
-        self.chess_board.reverse_move()
-        self.update_from_list(self.chess_board.board)
-
     def update_from_list(self, board_list=None):
         # deselect all selected pieces
         self.hint_grid.set_hints((-1, -1))
@@ -352,7 +397,6 @@ class Board(Qt.QWidget):
         for i in range(64): # range 64 means including only 63
             row, column = helpers.int_to_rowcolumn(i)
             item = self.grid_layout.itemAtPosition(row, column)
-            print('Removed ', row, column)
             if item != None:
                 self.grid_layout.removeItem(item)
                 item.widget().deleteLater() # not sure if needed but lets hope this works
@@ -402,10 +446,15 @@ class Board(Qt.QWidget):
         if not self.compare_board(self.chess_board.board):
             self.update_from_list(self.chess_board.board)
 
+        '''
         # TODO: put this somewhere else
         # make external moves
         if self.use_external_moves:
             self.make_external_move()
+        '''
+
+        # emit signal
+        self.move_done.emit()
 
     def set_piece(self, row=0, column=0, piece_id=0):
         # remove piece
@@ -474,12 +523,19 @@ class Board(Qt.QWidget):
             else:  # piece should be moved, deselect
                 self.set_selected_piece((0, 0), False)
 
-                # check if move is made from right color
+                # check if move is made from right color # TODO
+                ''' 
                 movecount = self.chess_board.movecount
-                piece_pos_int = helpers.pos_to_engineint(old_column, old_row)
                 white_moving = bool(movecount % 2)
+                '''
+
+                piece_pos_int = helpers.pos_to_engineint(old_column, old_row)
                 piece_type = self.chess_board.return_figur(piece_pos_int)
-                right_color = white_moving == engine.is_white(piece_type)
+                moving_allowed = False
+                if self.current_turn_type == 'white' and engine.is_white(piece_type):
+                    moving_allowed = True
+                elif self.current_turn_type == 'black' and not engine.is_white(piece_type):
+                    moving_allowed = True
 
                 # check if move is legal
                 old_engineint = helpers.pos_to_engineint(old_column, old_row)
@@ -487,7 +543,7 @@ class Board(Qt.QWidget):
                 legal_moves = self.chess_board.check_pos_moves(old_engineint)
                 legal = new_engineint in legal_moves
 
-                if right_color and legal:
+                if moving_allowed and legal:
                     self.move_piece((old_column, old_row), (new_column, new_row))
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -501,22 +557,17 @@ class Board(Qt.QWidget):
             row = int(((mouse_normalized.y() / grid_size.height()) * 8))
 
             # get piece color
-            movecount = self.chess_board.movecount
             piece_pos_int = helpers.pos_to_engineint(column, row)
-            white_moving = bool(movecount % 2)
             piece_type = self.chess_board.return_figur(piece_pos_int)
-            right_color = white_moving == engine.is_white(piece_type)
 
             # check if move from that color is allowed
-            color_allowed = False
-            if engine.is_white(piece_type) and self.playable_color == 'w':
-                color_allowed = True
-            elif not engine.is_white(piece_type) and self.playable_color == 'b':
-                color_allowed = True
-            elif self.playable_color == '':
-                color_allowed = True
+            moving_allowed = False
+            if self.current_turn_type == 'white' and engine.is_white(piece_type):
+                moving_allowed = True
+            elif self.current_turn_type == 'black' and not engine.is_white(piece_type):
+                moving_allowed = True
 
-            if right_color and color_allowed:
+            if moving_allowed:
                 # get pixmap
                 pixmap = child.get_drag_sprite()
 
@@ -568,6 +619,57 @@ class Board(Qt.QWidget):
 
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
+
+
+class GameController(QtCore.QObject):
+    game_over = QtCore.pyqtSignal(str)
+
+    def __init__(self, board: Board, engine_chess_board: engine.Chessboard):
+        super().__init__()
+        self.board = board
+        self.engine_chess_board = engine_chess_board
+        self.board.move_done.connect(self.on_move_done)
+
+    def on_move_done(self):
+        # check if there is a checkmate
+        checkmate_type = self.engine_chess_board.check_all()
+        print(checkmate_type)
+
+        match checkmate_type:
+            case 0:  # no checkmate
+                movecount = self.engine_chess_board.movecount
+                white_moving = white_moving = bool(movecount % 2)
+
+                if white_moving:
+                    next_color = 'white'
+                else:
+                    next_color = 'black'
+
+                self.board.allow_next_move(next_color)
+            case 1:  # check because of fifty move rule
+                self.game_over.emit('Remis: Fifty move rule.')
+            case 2:
+                self.game_over.emit('Remis: Repeated position.')
+            case 3:
+                self.game_over.emit('Remis: Stalemate.')
+            case 4:
+                self.game_over.emit('Checkmate. Congratulations!')
+
+    def reverse_move(self):
+        self.engine_chess_board.reverse_move()
+        self.board.update_from_list(self.engine_chess_board.board)
+
+        white_moving = bool(self.engine_chess_board.movecount % 2)
+
+        if white_moving:
+            next_color = 'white'
+        else:
+            next_color = 'black'
+
+        self.board.allow_next_move(next_color)
+
+
+
 
 
 class Hint(QtWidgets.QLabel):
