@@ -52,7 +52,7 @@ def get_stockfish_path():
 
 
 def get_marker_sprite_path():
-    return Path(sprites_path, "pawn.png")
+    return Path(sprites_path, "marker_2.svg")
 
 
 def int_to_rowcolumn(int_pos=0, rowcount=8, colcount=8) -> tuple:

@@ -114,8 +114,11 @@ class GameWindowStockfish(Qt.QWidget):
 
         # TODO: implement other playable colors with stockfish
         # add board to second layout
-        self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100), playable_color='w', use_external_moves=True)  # FIXME: hardcode
+        self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100), use_stockfish_move=True)  # FIXME: hardcode
         self.hboxlayout.addWidget(self.board)
+
+        # add gamecontroller
+        self.gamecontroller = GameControllerStockish(self.board, self.chess_board)
 
         # configure stockfish
         self.chess_board.s_configure(15, 10000, 15)
@@ -131,7 +134,7 @@ class GameWindowStockfish(Qt.QWidget):
         self.revert_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
         self.revert_button.setMinimumSize(self.button_size)
         #self.controllayout.addWidget(self.revert_button)  # FIXME: reversing moves not possible
-        self.revert_button.clicked.connect(self.board.reverse_move)
+        #self.revert_button.clicked.connect(self.controllayout.reversemove)
 
         # add debug info button
         self.debug_info_button = Qt.QPushButton('DInfo')
@@ -324,12 +327,12 @@ class Board(Qt.QWidget):
     move_done = QtCore.pyqtSignal()
 
     def __init__(self, chess_board, color_1=QtGui.QColor("#5f8231"), color_2=QtGui.QColor("#ffffff"),
-                 square_size=Qt.QSize(50, 50), use_external_moves=False):
+                 square_size=Qt.QSize(50, 50), use_stockfish_move=False):
         super().__init__()
 
         self.square_size = square_size
         self.chess_board = chess_board
-        self.use_external_moves = use_external_moves
+        self.use_stockfish_move = use_stockfish_move
 
         # add background
         self.checkerboard = Checkerboard(parent=self, square_size=self.square_size)
@@ -355,9 +358,6 @@ class Board(Qt.QWidget):
         # variables
         self.selected_piece = (-1, -1)
         self.current_turn_type = 'white'  # can either be white, black, or external
-
-        # signals
-        #self.move_done = QtCore.pyqtSignal()  # color is represented as string (black/white)
 
     def allow_next_move(self, turn_type: str):
         match turn_type:
@@ -437,7 +437,7 @@ class Board(Qt.QWidget):
         old_pos = helpers.pos_to_engineint(old_column, old_row)
         new_pos = helpers.pos_to_engineint(new_column, new_row)
 
-        if not self.use_external_moves:
+        if not self.use_stockfish_move:
             self.chess_board.move(old_pos, new_pos)
         else:
             self.chess_board.s_move(old_pos, new_pos)
@@ -445,13 +445,6 @@ class Board(Qt.QWidget):
         # to account for specific changes (en passant, rochade, ...) rebuild whole board
         if not self.compare_board(self.chess_board.board):
             self.update_from_list(self.chess_board.board)
-
-        '''
-        # TODO: put this somewhere else
-        # make external moves
-        if self.use_external_moves:
-            self.make_external_move()
-        '''
 
         # emit signal
         self.move_done.emit()
@@ -612,13 +605,60 @@ class Board(Qt.QWidget):
         # -> own piece is selected:
         # -> -> deselect own piece
 
-    def make_external_move(self):
-        self.chess_board.stockfish_move()
-
-        self.update_from_list(self.chess_board.board)
-
     def minimumSizeHint(self):
         return self.checkerboard.minimumSizeHint()
+
+
+class GameControllerStockish(QtCore.QObject):
+    game_over = QtCore.pyqtSignal(str)
+
+    def __init__(self, board: Board, engine_chess_board: engine.Chessboard, player_color='white'):
+        super().__init__()
+        self.board = board
+        self.engine_chess_board = engine_chess_board
+        self.board.move_done.connect(self.on_move_done)
+
+        self.player_color = player_color
+
+    def on_move_done(self):
+        # check if there is a checkmate
+        checkmate_type = self.engine_chess_board.check_all()
+
+        match checkmate_type:
+            case 0:  # no checkmate
+                movecount = self.engine_chess_board.movecount
+                white_moving = white_moving = bool(movecount % 2)
+
+                if (self.player_color == 'white') == white_moving:
+                    self.board.allow_next_move(self.player_color)
+                else:  # let stockfish make a move
+                    self.engine_chess_board.stockfish_move()
+                    self.board.update_from_list(self.engine_chess_board.board)
+
+            case 1:  # check because of fifty move rule
+                self.game_over.emit('Remis: Fifty move rule.')
+            case 2:
+                self.game_over.emit('Remis: Repeated position.')
+            case 3:
+                self.game_over.emit('Remis: Stalemate.')
+            case 4:
+                self.game_over.emit('Checkmate. Congratulations!')
+
+    def reverse_move(self):
+        pass
+        '''
+        self.engine_chess_board.reverse_move()
+        self.board.update_from_list(self.engine_chess_board.board)
+
+        white_moving = bool(self.engine_chess_board.movecount % 2)
+
+        if white_moving:
+            next_color = 'white'
+        else:
+            next_color = 'black'
+
+        self.board.allow_next_move(next_color)
+        '''
 
 
 class GameController(QtCore.QObject):
@@ -650,9 +690,9 @@ class GameController(QtCore.QObject):
                 self.game_over.emit('Remis: Fifty move rule.')
             case 2:
                 self.game_over.emit('Remis: Repeated position.')
-            case 3:
-                self.game_over.emit('Remis: Stalemate.')
             case 4:
+                self.game_over.emit('Remis: Stalemate.')
+            case 3:
                 self.game_over.emit('Checkmate. Congratulations!')
 
     def reverse_move(self):
@@ -667,9 +707,6 @@ class GameController(QtCore.QObject):
             next_color = 'black'
 
         self.board.allow_next_move(next_color)
-
-
-
 
 
 class Hint(QtWidgets.QLabel):
