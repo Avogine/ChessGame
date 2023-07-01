@@ -1,7 +1,8 @@
 from stockfish import Stockfish
+import helpers
 
 
-stockfish = Stockfish(path=r"../src/stockfish/linux/stockfish_15.1_linux_x64/stockfish-ubuntu-20.04-x86-64")
+stockfish = Stockfish(path=str(helpers.get_stockfish_path()))
 # static functions:
 def material(board):  # gibt den aktuellen Materialwert (Weis als + und Schwarz als - int)
     ret = 0
