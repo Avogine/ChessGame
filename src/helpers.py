@@ -1,7 +1,6 @@
 from pathlib import Path
 from colorama import *
-
-use_linux_paths = True  # TODO: use a better way to handle this
+from platform import system
 
 piece_sprite_path = [
     None,
@@ -19,12 +18,12 @@ piece_sprite_path = [
     "bk.svg"
 ]
 
-sprites_path_win = Path(r'~\..\src\sprites')  # windows version
-sprites_path_linux = Path(r'../src/sprites')  # linux version
+sprites_path = Path(r'src/sprites')  # linux version
 
-font_path_win = Path(r'~\..\src\fonts\highway_gothic.ttf')  # windows version
-font_path_linux = Path(r'../src/fonts/highway_gothic.ttf')  # linux version
+font_path = Path(r'src/fonts/highway_gothic.ttf')
 
+stockfish_path_linux_x64 = Path(r'src/stockfish/linux_x64/stockfish-ubuntu-x86-64-avx2')
+stockfish_path_windows_x64 = Path(r'src/stockfish/windows_x64/stockfish-windows-x86-64-avx2.exe')
 
 """♙♟♘♞♗♝♖♜♕♛♔♚"""
 
@@ -33,31 +32,27 @@ def get_piece_name(idx=0):
 
 
 def get_font_path():
-    if use_linux_paths:
-        return font_path_linux
-    else:
-        return font_path_win
+    return Path(Path.cwd(), font_path)
 
 
 def get_piece_sprite_path(idx=0):
-    if use_linux_paths:
-        return Path(sprites_path_linux, get_piece_name(idx))
-    else:
-        return Path(sprites_path_win, get_piece_name(idx))
+    return Path(Path.cwd(), sprites_path, get_piece_name(idx))
 
 
 def get_stockfish_path():
-    if use_linux_paths:
-        return r'../src/stockfish/linux/stockfish_15.1_linux_x64/stockfish-ubuntu-20.04-x86-64'
+    # get current os type
+    if system() == 'Windows':
+        return Path(Path.cwd(), stockfish_path_windows_x64)
+    elif system() == 'Linux':
+        return Path(Path.cwd(), stockfish_path_linux_x64)
     else:
-        return r"C:\Users\david\Desktop\Python\ChessGame\src\stockfish\stockfish_15.1_win_x64_popcnt\stockfish-windows-2022-x86-64-modern.exe" # FIXME
+        print('Error trying to load stockfish binary for system type: ', system())
+        print('What system are you on? - Currently no binary for this operating system included in our game.')
+
 
 
 def get_marker_sprite_path():
-    if use_linux_paths:
-        return Path(sprites_path_linux, "pawn.png")
-    else:
-        return Path(sprites_path_win, "pawn.png")
+    return Path(sprites_path, "pawn.png")
 
 
 def int_to_rowcolumn(int_pos=0, rowcount=8, colcount=8) -> tuple:
