@@ -495,6 +495,8 @@ class Chessboard:
             move_datei = [pos, new_pos, taken]
         if save_enpassant and not self.speicher:
             move_datei.append(save_enpassant)
+        elif kind == 1:
+            move_datei.append(420)
         self.speicher.append(tuple(move_datei))
 
 
@@ -532,15 +534,26 @@ class Chessboard:
             w_cas = 0
             b_cas = 0
             enp = 0
+            b = 0
+            prom = 0
             if len(datei) % 2 == 0:
                 datei = list(datei)
-                enp = datei.pop(len(datei) - 1)
+                b = datei.pop(len(datei) - 1)
                 datei = tuple(datei)
 
             if len(datei) == 3:
                 before_pos, now_pos, taken = datei
             else:
                 before_pos, now_pos, taken, w_cas, b_cas = datei
+
+            if b != 420: # if the last move was a promotion
+                enp = b
+                b = 0
+            else:
+                if int(now_pos/10) == 0:
+                    prom = 1
+                elif int(now_pos/10) == 7:
+                    prom = 2
 
             # kind of last move
             if self.return_figur(now_pos) == 1:
@@ -566,6 +579,8 @@ class Chessboard:
             # return move
             self.board[before_pos] = self.board[now_pos]
             self.board[now_pos] = taken
+            if prom:
+                self.board[before_pos] = prom
 
             # search for enpassant, must be after return move cause the enp pawn could be moved
             self.enpassant = enp
