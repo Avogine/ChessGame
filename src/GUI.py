@@ -23,7 +23,6 @@ class GUI(QtWidgets.QApplication):
         # run
         self.exec()
 
-
     def start_stockfish_game(self):
         # hide start menu
         self.menu_window.hide()
@@ -31,7 +30,6 @@ class GUI(QtWidgets.QApplication):
         # add main window
         self.game_window = GameWindowStockfish()
         self.game_window.stop_button.clicked.connect(self.stop_game)
-
 
     def start_game(self):
         # hide start menu
@@ -42,13 +40,11 @@ class GUI(QtWidgets.QApplication):
         self.game_window.stop_button.clicked.connect(self.stop_game)
         self.game_window.gamecontroller.game_over.connect(self.show_gameover_window)
 
-
     def show_gameover_window(self, gameover_message=''):
         # add gameover window
         self.gameover_window = GameOverWindow(gameover_message)
 
         self.gameover_window.back_button.clicked.connect(self.stop_game)
-
 
     def stop_game(self):
         # remove old window instances
@@ -116,7 +112,8 @@ class GameWindowStockfish(Qt.QWidget):
 
         # TODO: implement other playable colors with stockfish
         # add board to second layout
-        self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100), use_stockfish_move=True)  # FIXME: hardcode
+        self.board = Board(self.chess_board, square_size=QtCore.QSize(100, 100),
+                           use_stockfish_move=True)  # FIXME: hardcode
         self.hboxlayout.addWidget(self.board)
 
         # add gamecontroller
@@ -135,8 +132,8 @@ class GameWindowStockfish(Qt.QWidget):
         self.revert_button = Qt.QPushButton('<-')
         self.revert_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
         self.revert_button.setMinimumSize(self.button_size)
-        #self.controllayout.addWidget(self.revert_button)  # FIXME: reversing moves not possible
-        #self.revert_button.clicked.connect(self.controllayout.reversemove)
+        # self.controllayout.addWidget(self.revert_button)  # FIXME: reversing moves not possible
+        # self.revert_button.clicked.connect(self.controllayout.reversemove)
 
         # add debug info button
         self.debug_info_button = Qt.QPushButton('DInfo')
@@ -231,6 +228,68 @@ class GameOverWindow(QtWidgets.QWidget):
         self.show()
 
 
+
+class PromotingWindow(QtWidgets.QWidget):
+    promote = QtCore.pyqtSignal(int, int)
+
+    def __init__(self, parent, color='black', piece_pos_int=0, square_size=QtCore.QSize(100, 100), position=QtCore.QPoint(0, 0)):
+        super().__init__()
+        self.color = color
+        self.piece_pos_int = piece_pos_int
+        self.square_size = square_size
+
+        # set up vboxlayout
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
+
+        # load sprites
+        self.queen_icon = Qt.QIcon(str(helpers.get_piece_sprite_path(9 + int(self.color == 'black'))))
+        self.rook_icon = Qt.QIcon(str(helpers.get_piece_sprite_path(7 + int(self.color == 'black'))))
+        self.bishop_icon = Qt.QIcon(str(helpers.get_piece_sprite_path(5 + int(self.color == 'black'))))
+        self.knight_icon = Qt.QIcon(str(helpers.get_piece_sprite_path(3 + int(self.color == 'black'))))
+
+        # add possible pieces as buttons
+        self.queen_button = QtWidgets.QPushButton()
+        self.queen_button.setIcon(self.queen_icon)
+        self.queen_button.setIconSize(self.square_size)
+        self.queen_button.clicked.connect(self.promote_queen)
+        self.main_layout.addWidget(self.queen_button)
+        self.rook_button = QtWidgets.QPushButton()
+        self.rook_button.setIcon(self.rook_icon)
+        self.rook_button.setIconSize(self.square_size)
+        self.rook_button.clicked.connect(self.promote_rook)
+        self.main_layout.addWidget(self.rook_button)
+        self.bishop_button = QtWidgets.QPushButton()
+        self.bishop_button.setIcon(self.bishop_icon)
+        self.bishop_button.setIconSize(self.square_size)
+        self.bishop_button.clicked.connect(self.promote_bishop)
+        self.main_layout.addWidget(self.bishop_button)
+        self.knight_button = QtWidgets.QPushButton()
+        self.knight_button.setIcon(self.knight_icon)
+        self.knight_button.setIconSize(self.square_size)
+        self.knight_button.clicked.connect(self.promote_knight)
+        self.main_layout.addWidget(self.knight_button)
+
+        self.move(position)
+        self.show()
+
+    def promote_queen(self):
+        self.promote.emit(self.piece_pos_int, 9 + int(self.color == 'black'))
+
+    def promote_rook(self):
+        self.promote.emit(self.piece_pos_int, 7 + int(self.color == 'black'))
+
+    def promote_bishop(self):
+        self.promote.emit(self.piece_pos_int, 5 + int(self.color == 'black'))
+
+    def promote_knight(self):
+        self.promote.emit(self.piece_pos_int, 3 + int(self.color == 'black'))
+
+    def sizeHint(self) -> Qt.QSize:
+        return Qt.QSize(self.square_size.width(), self.square_size.height() * 4)
+
+
 class HintGrid(QtWidgets.QWidget):
     def __init__(self, parent, chess_board: engine.Chessboard, square_size=Qt.QSize(50, 50)):
         super().__init__(parent=parent)
@@ -248,12 +307,12 @@ class HintGrid(QtWidgets.QWidget):
 
         # set minimum width and height, else the layout just collapses
         for i in range(8):
-            self.grid_layout.setColumnMinimumWidth(i, self.square_size.width()) # TODO: use variables for minimum size
+            self.grid_layout.setColumnMinimumWidth(i, self.square_size.width())  # TODO: use variables for minimum size
             self.grid_layout.setRowMinimumHeight(i, self.square_size.height())
 
     def sizeHint(self) -> Qt.QSize:
         return self.square_size
-    
+
     def set_hints(self, piece_pos: tuple, selected=True):
         # get all necessary values
         # all even numbers correspond to black moves
@@ -270,19 +329,17 @@ class HintGrid(QtWidgets.QWidget):
             item = self.grid_layout.itemAtPosition(row, column)
             if item != None:
                 self.grid_layout.removeItem(item)
-                item.widget().deleteLater() # not sure if needed but lets hope this works
+                item.widget().deleteLater()  # not sure if needed but lets hope this works
 
         if engine.is_white(piece_type) == white_moving:
             legal_moves = self.chess_board.check_pos_moves(piece_pos_int)
 
             if selected:
                 for move in legal_moves:
-
                     widget = Hint(fix_size=self.square_size)
                     new_row, new_column = helpers.engineint_to_rowcolumn(move)
 
                     self.grid_layout.addWidget(widget, new_row, new_column)
-
 
 
 class Checkerboard(QtWidgets.QWidget):
@@ -360,6 +417,7 @@ class Board(Qt.QWidget):
         # variables
         self.selected_piece = (-1, -1)
         self.current_turn_type = 'white'  # can either be white, black, or external
+        self.promotion_window = None
 
     def allow_next_move(self, turn_type: str):
         match turn_type:
@@ -396,12 +454,12 @@ class Board(Qt.QWidget):
         self.hint_grid.set_hints((-1, -1))
 
         # remove old pieces
-        for i in range(64): # range 64 means including only 63
+        for i in range(64):  # range 64 means including only 63
             row, column = helpers.int_to_rowcolumn(i)
             item = self.grid_layout.itemAtPosition(row, column)
             if item != None:
                 self.grid_layout.removeItem(item)
-                item.widget().deleteLater() # not sure if needed but lets hope this works
+                item.widget().deleteLater()  # not sure if needed but lets hope this works
 
         own_idx = 0
         engine_idx = 0
@@ -409,12 +467,32 @@ class Board(Qt.QWidget):
             for piece in board_list:
                 if piece != 13:
                     # calculate row and column
-                    row, column= helpers.int_to_rowcolumn(own_idx)
+                    row, column = helpers.int_to_rowcolumn(own_idx)
                     if piece != 0:
                         self.set_piece(row, column, piece)
                     own_idx += 1
 
                 engine_idx += 1
+
+    def allow_promotion(self, color: str, piece_pos_int: int, window_pos: Qt.QSize):
+        # set to no playable color
+        self.current_turn_type = ''
+
+        # open promotion window
+        self.promotion_window = PromotingWindow(self, color, piece_pos_int, self.square_size, window_pos + self.geometry().topLeft())
+        self.promotion_window.show()
+
+        # connect necessary signal
+        self.promotion_window.promote.connect(self.finalize_promotion)
+
+    @QtCore.pyqtSlot(int, int)
+    def finalize_promotion(self, piece_pos_int: int, piece_type: int):
+        self.chess_board.promotion(piece_pos_int, piece_type)
+        self.promotion_window.deleteLater()
+
+        self.update_from_list(self.chess_board.board)
+
+        self.move_done.emit()
 
     # this does not check whether the move is allowed or not
     def move_piece(self, origin: tuple, dest: tuple):
@@ -440,16 +518,22 @@ class Board(Qt.QWidget):
         new_pos = helpers.pos_to_engineint(new_column, new_row)
 
         if not self.use_stockfish_move:
-            self.chess_board.move(old_pos, new_pos)
+            move_kind = self.chess_board.move(old_pos, new_pos)
         else:
-            self.chess_board.s_move(old_pos, new_pos)
+            move_kind = self.chess_board.s_move(old_pos, new_pos)
 
         # to account for specific changes (en passant, rochade, ...) rebuild whole board
         if not self.compare_board(self.chess_board.board):
             self.update_from_list(self.chess_board.board)
 
-        # emit signal
-        self.move_done.emit()
+        # emit signal if not promoting
+        if move_kind == 0:
+            self.move_done.emit()
+        elif move_kind == 1:
+            window_pos = Qt.QPoint(new_column * self.square_size.width(), new_row * self.square_size.height())
+            print(window_pos)
+
+            self.allow_promotion(self.current_turn_type, new_pos, window_pos)
 
     def set_piece(self, row=0, column=0, piece_id=0):
         # remove piece
@@ -468,7 +552,8 @@ class Board(Qt.QWidget):
 
         # deselect, even if we might select it again
         if self.selected_piece != (-1, -1):
-            last_selected_item: ChessPiece = self.grid_layout.itemAtPosition(self.selected_piece[1], self.selected_piece[0])
+            last_selected_item: ChessPiece = self.grid_layout.itemAtPosition(self.selected_piece[1],
+                                                                             self.selected_piece[0])
             if self.grid_layout.itemAtPosition(self.selected_piece[1], self.selected_piece[0]) is not None:
                 last_selected_item.widget().set_select(False)
 
@@ -583,8 +668,8 @@ class Board(Qt.QWidget):
 
                 # clean up
                 child.show()
-        else: # normal press action
-            pass # TODO: implement # press movement
+        else:  # normal press action
+            pass  # TODO: implement # press movement
 
         # possibilities:
         # click on empty square:
@@ -670,7 +755,6 @@ class GameController(QtCore.QObject):
     def on_move_done(self):
         # check if there is a checkmate
         checkmate_type = self.engine_chess_board.check_all()
-        print(checkmate_type)
 
         match checkmate_type:
             case 0:  # no checkmate
@@ -723,7 +807,7 @@ class Hint(QtWidgets.QLabel):
         path = helpers.get_marker_sprite_path()
         self.sprite = Qt.QPixmap(str(path))
         self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
-                                                  QtCore.Qt.TransformationMode.SmoothTransformation))
+                                          QtCore.Qt.TransformationMode.SmoothTransformation))
         self.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
     def sizeHint(self) -> QtCore.QSize:
@@ -764,15 +848,18 @@ class ChessPiece(QtWidgets.QLabel):
         return self.fix_size
 
     def get_drag_sprite(self):
-        return self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+        return self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                                  QtCore.Qt.TransformationMode.SmoothTransformation)
 
     def set_select(self, selected=True):
         if self.selected and not selected:
             # scale pixmap to original size
-            self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+            self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                                              QtCore.Qt.TransformationMode.SmoothTransformation))
         elif not self.selected and selected:
             # scale pixmap to indicate selection
-            self.setPixmap(self.sprite.scaled(self.fix_size * 0.75, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation))
+            self.setPixmap(self.sprite.scaled(self.fix_size * 0.75, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                                              QtCore.Qt.TransformationMode.SmoothTransformation))
 
         self.selected = selected
 
@@ -793,6 +880,7 @@ class ChessPiece(QtWidgets.QLabel):
                 # scale pixmap to original size
                 self.setPixmap(self.sprite.scaled(self.fix_size, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
                                                   QtCore.Qt.TransformationMode.SmoothTransformation))
+
 
 class RandomPiece(ChessPiece):
     def __init__(self, size=Qt.QSize(50, 50)):
