@@ -53,7 +53,9 @@ class GUI(QtWidgets.QApplication):
     def stop_game(self):
         # remove old window instances
         self.game_window.deleteLater()
-        self.gameover_window.deleteLater()
+        if hasattr(self, 'gameover_window'):
+            self.gameover_window.deleteLater()
+            del self.gameover_window
 
         # show menu window
         self.menu_window.show()
@@ -517,11 +519,6 @@ class Board(Qt.QWidget):
                 self.set_selected_piece((0, 0), False)
 
                 # check if move is made from right color # TODO
-                ''' 
-                movecount = self.chess_board.movecount
-                white_moving = bool(movecount % 2)
-                '''
-
                 piece_pos_int = helpers.pos_to_engineint(old_column, old_row)
                 piece_type = self.chess_board.return_figur(piece_pos_int)
                 moving_allowed = False
