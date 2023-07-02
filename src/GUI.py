@@ -139,7 +139,7 @@ class GameWindowStockfish(Qt.QWidget):
         self.debug_info_button = Qt.QPushButton('DInfo')
         self.debug_info_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
         self.debug_info_button.setMinimumSize(self.button_size)
-        self.controllayout.addWidget(self.debug_info_button)
+        #self.controllayout.addWidget(self.debug_info_button)
         self.debug_info_button.clicked.connect(lambda: print(self.chess_board.info()))
 
         self.setLayout(self.vboxlayout)
@@ -193,7 +193,7 @@ class GameWindow(Qt.QWidget):
         self.debug_info_button = Qt.QPushButton('DInfo')
         self.debug_info_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
         self.debug_info_button.setMinimumSize(self.button_size)
-        self.controllayout.addWidget(self.debug_info_button)
+        #self.controllayout.addWidget(self.debug_info_button)
         self.debug_info_button.clicked.connect(lambda: print(self.chess_board.info()))
 
         self.setLayout(self.vboxlayout)
