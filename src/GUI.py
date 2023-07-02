@@ -527,7 +527,7 @@ class Board(Qt.QWidget):
             self.update_from_list(self.chess_board.board)
 
         # emit signal if not promoting
-        if move_kind == 0:
+        if move_kind != 1:
             self.move_done.emit()
         elif move_kind == 1:
             window_pos = Qt.QPoint(new_column * self.square_size.width(), new_row * self.square_size.height())
