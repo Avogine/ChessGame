@@ -705,7 +705,7 @@ class GameControllerStockish(QtCore.QObject):
     def on_move_done(self):
         # check if there is a checkmate
         checkmate_type = self.engine_chess_board.check_all()
-
+        print(checkmate_type)
         match checkmate_type:
             case 0:  # no checkmate
                 movecount = self.engine_chess_board.movecount
@@ -721,9 +721,9 @@ class GameControllerStockish(QtCore.QObject):
                 self.game_over.emit('Remis: Fifty move rule.')
             case 2:
                 self.game_over.emit('Remis: Repeated position.')
-            case 3:
-                self.game_over.emit('Remis: Stalemate.')
             case 4:
+                self.game_over.emit('Remis: Stalemate.')
+            case 3:
                 self.game_over.emit('Checkmate. Congratulations!')
 
     def reverse_move(self):

@@ -1,7 +1,7 @@
-import engine
+import engine2
 
 
-my_board = engine.Chessboard("rnbq2nr/ppppkppp/8/4p3/1b2P3/3P4/PPPB1PPP/RN1QKBNR w KQ - 0 8")
+my_board = engine2.Chessboard("7k/5Q2/8/8/8/8/8/4K3 w - - 1 16")
 #2bq1k2/2pppp2/8/8/1b6/2B5/2P1P3/3QK3 w - - 0 2
 def turn():
     if my_board.movecount % 2 == 0:
@@ -99,7 +99,7 @@ def ren(p):  # rendert das übergebene Feld(p)
         else:
             return "\33[48;5;248m" + "\33[38;5;255m" + " ♛ "
     elif f == 11:
-        if my_board.stat_check == 2:
+        if my_board.w_check:
             if back:
                 return "\33[48;5;238m" + "\33[38;5;1m" + " ♚ "
             else:
@@ -135,7 +135,7 @@ def ren(p):  # rendert das übergebene Feld(p)
         else:
             return "\33[48;5;248m" + "\33[38;5;0m" + " ♛ "
     elif f == 12:
-        if my_board.stat_check == 1:
+        if my_board.b_check:
             if back:
                 return "\33[48;5;238m" + "\33[38;5;1m" + " ♚ "
             else:
@@ -149,8 +149,7 @@ def ren(p):  # rendert das übergebene Feld(p)
 
 def term_render():  # rendert das aktuelle Chessboard
     print(f"""
-                                            Material: {my_board.material}
-                                            Check: {my_board.stat_check}""")
+                                            Material: {my_board.material}""")
     for i in (0, 10, 20, 30, 40, 50, 60, 70):
         print(
             f"""        {ren(i + 1)}{ren(i + 2)}{ren(i + 3)}{ren(i + 4)}{ren(i + 5)}{ren(i + 6)}{ren(i + 7)}{ren(i + 8)}{zahl(i)}""")
@@ -284,13 +283,22 @@ def start_normal_game():
 
     while True:  # start
         term_render()
-        x = my_board.all_moves()
-        if not x:
-            print("[T] Checkmate Motherfucker")
-            if my_board.movecount % 2 == 0:
-                print("[T] White won")
-            else:
-                print("[T] Black won")
+        checkmate_type = my_board.check_all()
+        match checkmate_type:
+            case 0:  # no checkmate
+                pass
+            case 1:  # check because of fifty move rule
+                print('Remis: Fifty move rule.')
+                break
+            case 2:
+                print('Remis: Repeated position.')
+                break
+            case 4:
+                print('Remis: Stalemate.')
+                break
+            case 3:
+                print('Checkmate. Congratulations!')
+                break
 
 
         pos = input(f"[{turn()}] Select: ")
@@ -301,5 +309,3 @@ def start_normal_game():
 
 start_normal_game()
 
-
-start_normal_game()

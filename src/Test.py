@@ -1,7 +1,7 @@
 import engine
 
 
-my_board = engine.Chessboard("r2qk2r/ppp2ppp/2n1b3/1BbpP3/8/2P1B1Q1/PPP3PP/R3K1NR w KQkq d6 0 2")
+my_board = engine.Chessboard("r6r/4r2p/2p3p1/p1n1p1k1/P5P1/1PN1R3/5PP1/3R2K1 w - - 0 56")
 
 def turn():
     if my_board.movecount % 2 == 0:
@@ -100,7 +100,7 @@ def ren(p):  # rendert das übergebene Feld(p)
         else:
             return "\33[48;5;248m" + "\33[38;5;255m" + " ♛ "
     elif f == 11:
-        if my_board.stat_check == 2:
+        if my_board.w_check:
             if back:
                 return "\33[48;5;238m" + "\33[38;5;1m" + " ♚ "
             else:
@@ -136,7 +136,7 @@ def ren(p):  # rendert das übergebene Feld(p)
         else:
             return "\33[48;5;248m" + "\33[38;5;0m" + " ♛ "
     elif f == 12:
-        if my_board.stat_check == 1:
+        if my_board.b_check:
             if back:
                 return "\33[48;5;238m" + "\33[38;5;1m" + " ♚ "
             else:
@@ -151,7 +151,7 @@ def ren(p):  # rendert das übergebene Feld(p)
 def term_render():  # rendert das aktuelle Chessboard
     print(f"""
                                             Material: {my_board.material}
-                                            Check: {my_board.stat_check}""")
+                                            """)
     for i in (0, 10, 20, 30, 40, 50, 60, 70):
         print(
             f"""        {ren(i + 1)}{ren(i + 2)}{ren(i + 3)}{ren(i + 4)}{ren(i + 5)}{ren(i + 6)}{ren(i + 7)}{ren(i + 8)}{zahl(i)}""")
@@ -160,7 +160,7 @@ def term_render():  # rendert das aktuelle Chessboard
     print("\n")
 
 speicher = [my_board.conv_to_FEN()]
-
+my_board.speicher = [(65, 45, 0, 3, 3), (14, 34, 0, 3, 3), (45, 34, 2, 3, 3), (4, 34, 1, 3, 3), (77, 56, 0, 3, 3), (34, 25, 0, 3, 3), (76, 65, 0, 3, 3), (17, 27, 0, 3, 3), (75, 77, 0, 3, 3), (6, 17, 0, 0, 3), (64, 44, 0, 0, 3), (25, 24, 0, 0, 3), (63, 43, 0, 0, 3), (13, 23, 0, 0, 3), (72, 53, 0, 0, 3), (7, 26, 0, 0, 3), (43, 33, 0, 0, 3), (24, 4, 0, 0, 3), (65, 43, 0, 0, 3), (2, 14, 0, 0, 3), (73, 46, 0, 0, 3), (11, 31, 0, 0, 3), (74, 64, 0, 0, 3), (5, 7, 0, 0, 3), (46, 28, 0), (12, 22, 0), (28, 17, 6), (7, 17, 5), (61, 41, 0), (22, 33, 1), (44, 33, 2), (14, 33, 1), (64, 55, 0), (33, 14, 0), (76, 75, 0), (6, 5, 0), (68, 58, 0), (4, 22, 0), (62, 52, 0), (22, 55, 9), (75, 55, 10), (3, 12, 0), (71, 74, 0), (12, 3, 0), (56, 37, 0), (15, 35, 0), (43, 16, 2), (5, 15, 0), (16, 25, 0), (14, 33, 0), (25, 3, 6), (17, 28, 0), (3, 47, 0), (26, 47, 5), (58, 47, 4), (28, 37, 3)]
 while True:
     term_render()
     print(my_output(my_board.enpassant))

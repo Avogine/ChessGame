@@ -1,7 +1,7 @@
 from stockfish import Stockfish
 import helpers
 
-stockfish = Stockfish(helpers.get_stockfish_path())
+
 # static functions:
 def material(board):  # gibt den aktuellen Materialwert (Weis als + und Schwarz als - int)
     ret = 0
@@ -164,7 +164,7 @@ class Chessboard:
         self.movecount += 1
         self.speicher = []  # Speicher Züge für def reverse_move()
         self.board_speicher = []  # Speicher gesamtes Spielfeld als FEN falls es sich 3 mal wiederholt
-
+        self.stockfish = Stockfish(helpers.get_stockfish_path())
         self.w_check = False
         self.b_check = False
         self.material = material(self.board)
@@ -380,6 +380,7 @@ class Chessboard:
     # Methoden
 
     def check_all(self):
+
         if self.fifty_move_rule == 50:
             return 1  # remis wegen 50-Move Rule
         elif not self.all_moves():
@@ -387,6 +388,7 @@ class Chessboard:
                 return 3  # Checkmate
             else:
                 return 4  # remis wegen Stealmate
+
         elif self.board in self.board_speicher:
             i = 0
             for x in self.board_speicher:
@@ -399,7 +401,7 @@ class Chessboard:
         else:
             return 0
 
-    # TODO: Checkmat erkennen
+
 
     def move(self, pos, new_pos):
         kind = 0
@@ -639,6 +641,13 @@ class Chessboard:
             if now_pos == self.black_king_pos:
                 self.black_king_pos = before_pos
 
+            if self.check_search(self.black_king_pos, False):
+                self.b_check = True  # Black in check
+            elif self.check_search(self.white_king_pos, True):
+                self.w_check = True  # White in check
+            else:
+                self.w_check = False
+                self.b_check = False
         else:
             pass
     def check_pos_moves(self, pos):
@@ -734,12 +743,10 @@ class Chessboard:
                     if not self.check_search(76, True) and not self.check_search(77, True):
                         ret.append(77)
                         ret.append(78)
-                if self.w_castle_Queen and self.return_figur(74) + self.return_figur(73) + self.return_figur(
-                        72) == 0:
+                if self.w_castle_Queen and self.return_figur(74) + self.return_figur(73) == 0:
                     if not self.check_search(72, True) and not self.check_search(73, True) and not self.check_search(74,
                                                                                                                      True):
                         ret.append(73)
-                        ret.append(72)
                         ret.append(71)
 
         elif piece == 12:  # moves for the black king
@@ -753,12 +760,10 @@ class Chessboard:
                     if not self.check_search(6, False) and not self.check_search(7, False):
                         ret.append(7)
                         ret.append(8)
-                if self.b_castle_Queen and self.return_figur(4) + self.return_figur(3) + self.return_figur(
-                        2) == 0:
+                if self.b_castle_Queen and self.return_figur(4) + self.return_figur(3) == 0:
                     if not self.check_search(2, False) and not self.check_search(3, False) and not self.check_search(4,
                                                                                                                      False):
                         ret.append(3)
-                        ret.append(2)
                         ret.append(1)
         else:
             print(f"Fehler 274"
@@ -796,24 +801,24 @@ class Chessboard:
     def s_move(self, pos, new_pos):
         self.move(pos, new_pos)
         movement = my_output(pos) + my_output(new_pos)
-        stockfish.make_moves_from_current_position([movement])
+        self.stockfish.make_moves_from_current_position([movement])
 
     def stockfish_move(self):
-        best = stockfish.get_best_move()
+        best = self.stockfish.get_best_move()
         a, b, c, d = list(best)
         pose = a + b
         move = c + d
 
         self.move(my_input(pose), my_input(move))
-        stockfish.make_moves_from_current_position([pose + move])
+        self.stockfish.make_moves_from_current_position([pose + move])
 
     def s_configure(self, skill=0, elo=0, depth=0):
         if skill:
-            stockfish.set_skill_level(int(skill))
+            self.stockfish.set_skill_level(int(skill))
         if elo:
-            stockfish.set_elo_rating(int(elo))
+            self.stockfish.set_elo_rating(int(elo))
         if depth:
-            stockfish.set_depth(int(depth))
+            self.stockfish.set_depth(int(depth))
 
     def info(self):
         print(f"""
