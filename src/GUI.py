@@ -120,7 +120,7 @@ class GameWindowStockfish(Qt.QWidget):
         self.gamecontroller = GameControllerStockish(self.board, self.chess_board)
 
         # configure stockfish
-        self.chess_board.s_configure(15, 10000, 15)
+        self.chess_board.s_configure(15, 3200, 10)
 
         # add stop button
         self.stop_button = Qt.QPushButton('Stop')
