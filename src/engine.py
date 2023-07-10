@@ -1,7 +1,7 @@
 from stockfish import Stockfish
 import helpers
 
-stockfish = Stockfish(helpers.get_stockfish_path())
+
 # static functions:
 def material(board):  # gibt den aktuellen Materialwert (Weis als + und Schwarz als - int)
     ret = 0
@@ -158,7 +158,6 @@ standartboard = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
 
 # TODO: remis, promotion
 class Chessboard:
-
     def __init__(self, my_board=standartboard):
         self.board, turn, self.w_castle_King, self.w_castle_Queen, self.b_castle_King, self.b_castle_Queen, self.enpassant, self.fifty_move_rule, self.movecount = con_Table(my_board)  # board infos
         self.movecount += 1
@@ -171,6 +170,8 @@ class Chessboard:
 
         self.black_king_pos = 5  # traced die Position des Kings um leichter nach Checks zu suchen
         self.white_king_pos = 75  # wird in move geändert
+
+        self.stockfish = Stockfish(helpers.get_stockfish_path())
 
     # Hilfsmethoden
     def return_figur(self, pos, my_board=()):
@@ -796,24 +797,24 @@ class Chessboard:
     def s_move(self, pos, new_pos):
         self.move(pos, new_pos)
         movement = my_output(pos) + my_output(new_pos)
-        stockfish.make_moves_from_current_position([movement])
+        self.stockfish.make_moves_from_current_position([movement])
 
     def stockfish_move(self):
-        best = stockfish.get_best_move()
+        best = self.stockfish.get_best_move()
         a, b, c, d = list(best)
         pose = a + b
         move = c + d
 
         self.move(my_input(pose), my_input(move))
-        stockfish.make_moves_from_current_position([pose + move])
+        self.stockfish.make_moves_from_current_position([pose + move])
 
     def s_configure(self, skill=0, elo=0, depth=0):
         if skill:
-            stockfish.set_skill_level(int(skill))
+            self.stockfish.set_skill_level(int(skill))
         if elo:
-            stockfish.set_elo_rating(int(elo))
+            self.stockfish.set_elo_rating(int(elo))
         if depth:
-            stockfish.set_depth(int(depth))
+            self.stockfish.set_depth(int(depth))
 
     def info(self):
         print(f"""
