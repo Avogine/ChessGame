@@ -158,7 +158,6 @@ standartboard = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
 
 # TODO: remis, promotion
 class Chessboard:
-
     def __init__(self, my_board=standartboard):
         self.board, turn, self.w_castle_King, self.w_castle_Queen, self.b_castle_King, self.b_castle_Queen, self.enpassant, self.fifty_move_rule, self.movecount = con_Table(my_board)  # board infos
         self.movecount += 1
@@ -171,6 +170,8 @@ class Chessboard:
 
         self.black_king_pos = 5  # traced die Position des Kings um leichter nach Checks zu suchen
         self.white_king_pos = 75  # wird in move geändert
+
+        self.stockfish = Stockfish(helpers.get_stockfish_path())
 
     # Hilfsmethoden
     def return_figur(self, pos, my_board=()):

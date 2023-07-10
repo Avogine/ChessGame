@@ -2,16 +2,12 @@ import GUI
 import engine
 import random
 
-
-gui = GUI.GUI()
-
-
-"""def ready():
+def ready():
     # create new chess gui
-    pass
-
+    gui = GUI.GUI()
 
 if __name__ == "__main__":
-    ready()"""
+    ready()
 
+# uncomment to start a terminal GUI session
 #Terminal_GUI.start_normal_game()

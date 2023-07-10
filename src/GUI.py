@@ -120,7 +120,7 @@ class GameWindowStockfish(Qt.QWidget):
         self.gamecontroller = GameControllerStockish(self.board, self.chess_board)
 
         # configure stockfish
-        self.chess_board.s_configure(15, 10000, 15)
+        self.chess_board.s_configure(15, 3200, 10)
 
         # add stop button
         self.stop_button = Qt.QPushButton('Stop')
@@ -139,11 +139,11 @@ class GameWindowStockfish(Qt.QWidget):
         self.debug_info_button = Qt.QPushButton('DInfo')
         self.debug_info_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
         self.debug_info_button.setMinimumSize(self.button_size)
-        self.controllayout.addWidget(self.debug_info_button)
+        #self.controllayout.addWidget(self.debug_info_button)
         self.debug_info_button.clicked.connect(lambda: print(self.chess_board.info()))
 
         self.setLayout(self.vboxlayout)
-        self.show()
+        self.showFullScreen()
         self.setWindowTitle('ChessGame - Game')
 
         # fill board
@@ -193,11 +193,11 @@ class GameWindow(Qt.QWidget):
         self.debug_info_button = Qt.QPushButton('DInfo')
         self.debug_info_button.setSizePolicy(Qt.QSizePolicy.Maximum, Qt.QSizePolicy.Maximum)
         self.debug_info_button.setMinimumSize(self.button_size)
-        self.controllayout.addWidget(self.debug_info_button)
+        #self.controllayout.addWidget(self.debug_info_button)
         self.debug_info_button.clicked.connect(lambda: print(self.chess_board.info()))
 
         self.setLayout(self.vboxlayout)
-        self.show()
+        self.showFullScreen()
         self.setWindowTitle('ChessGame - Game')
 
         # fill board
@@ -237,6 +237,8 @@ class PromotingWindow(QtWidgets.QWidget):
         self.color = color
         self.piece_pos_int = piece_pos_int
         self.square_size = square_size
+
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
 
         # set up vboxlayout
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -287,6 +289,8 @@ class PromotingWindow(QtWidgets.QWidget):
         self.promote.emit(self.piece_pos_int, 3 + int(self.color == 'black'))
 
     def sizeHint(self) -> Qt.QSize:
+        return Qt.QSize(self.square_size.width(), self.square_size.height() * 4)
+    def minimumSizeHint(self) -> Qt.QSize:
         return Qt.QSize(self.square_size.width(), self.square_size.height() * 4)
 
 
@@ -479,7 +483,12 @@ class Board(Qt.QWidget):
         self.current_turn_type = ''
 
         # open promotion window
-        self.promotion_window = PromotingWindow(self, color, piece_pos_int, self.square_size, window_pos + self.geometry().topLeft())
+        self.promotion_window = PromotingWindow(self.parentWidget(), color, piece_pos_int, self.square_size, window_pos)
+        self.promotion_window.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint, True)
+        self.promotion_window.setWindowFlag(QtCore.Qt.WindowType.WindowMinimizeButtonHint, False)
+        self.promotion_window.setWindowFlag(QtCore.Qt.WindowType.WindowMaximizeButtonHint, False)
+        self.promotion_window.setWindowFlag(QtCore.Qt.WindowType.WindowTitleHint, False)
+        self.promotion_window.setWindowTitle('Promotion')
         self.promotion_window.show()
 
         # connect necessary signal
@@ -527,11 +536,10 @@ class Board(Qt.QWidget):
             self.update_from_list(self.chess_board.board)
 
         # emit signal if not promoting
-        if move_kind != 1:
+        if move_kind != 1:  # normal move
             self.move_done.emit()
         elif move_kind == 1:
-            window_pos = Qt.QPoint(new_column * self.square_size.width(), new_row * self.square_size.height())
-            print(window_pos)
+            window_pos = self.mapToGlobal(QtCore.QPoint(new_column * self.square_size.width(), new_row * self.square_size.height()))
 
             self.allow_promotion(self.current_turn_type, new_pos, window_pos)
 
