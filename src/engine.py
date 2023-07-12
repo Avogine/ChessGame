@@ -566,18 +566,20 @@ class Chessboard:
                 if taken == 0 and now_pos % 10 != before_pos % 10:
                     self.board[now_pos - 10] = 1
 
-            if before_pos == 75 and now_pos == 77:   # last move was castle
-                self.board[76] = 0  # neue Feld ist gleich der Figur
-                self.board[78] = 7
-            elif before_pos == 75 and now_pos == 73:
-                self.board[74] = 0
-                self.board[71] = 7
-            elif before_pos == 5 and now_pos == 7:
-                self.board[6] = 0  # neue Feld ist gleich der Figur
-                self.board[8] = 8
-            elif before_pos == 5 and now_pos == 3:
-                self.board[4] = 0
-                self.board[1] = 8
+            if self.return_figur(now_pos) == 11:
+                if before_pos == 75 and now_pos == 77:   # last move was castle
+                    self.board[76] = 0  # neue Feld ist gleich der Figur
+                    self.board[78] = 7
+                elif before_pos == 75 and now_pos == 73:
+                    self.board[74] = 0
+                    self.board[71] = 7
+            if self.return_figur(now_pos) == 11:
+                if before_pos == 5 and now_pos == 7:
+                    self.board[6] = 0  # neue Feld ist gleich der Figur
+                    self.board[8] = 8
+                elif before_pos == 5 and now_pos == 3:
+                    self.board[4] = 0
+                    self.board[1] = 8
 
             # return move
             self.board[before_pos] = self.board[now_pos]
