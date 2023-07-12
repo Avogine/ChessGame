@@ -556,8 +556,6 @@ class Board(Qt.QWidget):
             self.grid_layout.addWidget(item_widget, row, column)
 
     def set_selected_piece(self, piece_pos=(0, 0), selected=True):
-        new_selected_widget: ChessPiece = self.grid_layout.itemAtPosition(piece_pos[1], piece_pos[0]).widget()
-
         # deselect, even if we might select it again
         if self.selected_piece != (-1, -1):
             last_selected_item: ChessPiece = self.grid_layout.itemAtPosition(self.selected_piece[1],
@@ -568,10 +566,11 @@ class Board(Qt.QWidget):
         # select or deselect new one
         if selected:
             self.selected_piece = piece_pos
+            new_selected_widget: ChessPiece = self.grid_layout.itemAtPosition(piece_pos[1], piece_pos[0]).widget()
             new_selected_widget.set_select(True)
         else:
             self.selected_piece = (-1, -1)
-            new_selected_widget.set_select(False)
+            #new_selected_widget.set_select(False) # not needed, we already do this above
 
         # update move hints
         self.hint_grid.set_hints(piece_pos, selected)
